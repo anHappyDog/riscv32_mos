@@ -13,12 +13,6 @@ typedef LIST_ENTRY(Page) Page_LIST_entry_t;
 
 struct Page {
 	Page_LIST_entry_t pp_link; /* free list link */
-
-	// Ref is the count of pointers (usually in page table entries)
-	// to this page.  This only holds for pages allocated using
-	// page_alloc.  Pages allocated at boot time using pmap.c's "alloc"
-	// do not have valid reference count fields.
-
 	u_short pp_ref;
 };
 
@@ -29,21 +23,24 @@ static inline u_long page2ppn(struct Page *pp) {
 	return pp - pages;
 }
 
-static inline u_long page2pa(struct Page *pp) {
+static inline u_long page2sft(struct Page *pp) {
 	return page2ppn(pp) << PGSHIFT;
 }
 
-static inline struct Page *pa2page(u_long pa) {
-	if (PPN(pa) >= npage) {
-		panic("pa2page called with invalid pa: %x", pa);
+static inline u_long page2ptx(struct Page *pp) {
+	return page2ppn(pp) << PTSHIFT;
+}
+
+static inline struct Page *addr2page(u_long addr) {
+	if (PPN(addr) >= npage) {
+		panic("pa2page called with invalid ahdress: %x", addr);
 	}
-	return &pages[PPN(pa)];
+	return &pages[PPN(addr)];
 }
 
-static inline u_long page2kva(struct Page *pp) {
-	return KADDR(page2pa(pp));
+static inline u_long page2addr(struct Page *pp) {
+	return page2sft(pp) + KERNSTART;
 }
-
 static inline u_long va2pa(Pde *pgdir, u_long va) {
 	Pte *p;
 
@@ -51,7 +48,7 @@ static inline u_long va2pa(Pde *pgdir, u_long va) {
 	if (!(*pgdir & PTE_V)) {
 		return ~0;
 	}
-	p = (Pte *)KADDR(PTE_ADDR(*pgdir));
+	p = (Pte *)VADDR(PTE_ADDR(*pgdir));
 	if (!(p[PTX(va)] & PTE_V)) {
 		return ~0;
 	}
@@ -63,6 +60,8 @@ void mips_vm_init(void);
 void mips_init(void);
 void page_init(void);
 void *alloc(u_int n, u_int align, int clear);
+
+void pgdir_init();
 
 int page_alloc(struct Page **pp);
 void page_free(struct Page *pp);

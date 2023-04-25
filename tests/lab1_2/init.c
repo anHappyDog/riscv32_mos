@@ -103,5 +103,6 @@ void mips_init() {
 	printk_1_check();
 	printk_2_check();
 	printk_3_check();
-	halt();
+//	while(1);
+	//halt();
 }
