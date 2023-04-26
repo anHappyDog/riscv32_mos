@@ -69,7 +69,21 @@ void page_free(struct Page* pp) {
 	assert(pp->pp_ref == 0);
 	LIST_INSERT_HEAD(&page_free_list,pp,pp_link);
 }
-
+static int pgdir_init_fill(Pde* pgdir,u_long va,struct Page* p) {
+	Pde* pgdir_entryp;
+	Pte* pte;
+	struct Page* pp;
+	pgdir_entryp = pgdir + PDX(va);
+	if (!((*pgdir_entryp) & PTE_V)) {
+		try(page_alloc(&pp));
+		*pgdir_entryp = page2ptx(pp) | PTE_D | PTE_V;
+		pp->pp_ref += 1;
+	}
+	
+	pte = (Pte*)PADDR(PTE_ADDR(*pgdir_entryp)) + PTX(va);
+	*pte = page2ptx(p) | PTE_D | PTE_V;
+	return 0;
+}
 
 
 
@@ -92,29 +106,64 @@ static int pgdir_walk(Pde* pgdir, u_long va, int create, Pte** ppte) {
 	}
 	//printk("0x%08x\n",PTE_ADDR(*pgdir_entryp));
 	//printk("0x%08x\n",VADDR(PTE_ADDR(*pgdir_entryp)));
-	*ppte = (Pte*)VADDR(PTE_ADDR(*pgdir_entryp)) + PTX(va);
+	*ppte = (Pte*)PADDR(PTE_ADDR(*pgdir_entryp)) + PTX(va);
 	return 0;
 }
 
-void pgdir_init() {
+int pgdir_init() {
 	Pde* pgdir;
 	struct Page *pp0;
     try(page_alloc(&pp0));	
 	pgdir = (Pde*)page2addr(pp0);
 	pp0->pp_ref = 1;
-	Pte* pte;
+	int cnt = 0;
 	for (int i = 0; page2addr(&pages[i]) < KERNEND; ++i) {
-		pgdir_walk(pgdir,PPN2VA(i) ,1,&pte);
+	//printk("the address is 0x%08x : 0x%08x\n",PPN2VA(i),page2addr(&pages[i]));
+		try(pgdir_init_fill(pgdir,PPN2VA(i),&pages[i]));
+		++cnt;
 	}
+	//try(pgdir_init_fill(pgdir,PPN2VA(page2ppn(pp0)),pp0));
+	
 	asm ("sfence.vma");
-	asm ("");
-	//
+	asm ("csrw satp, %0" : : "r"(((((unsigned long)pgdir) >> 12) | (1 << 31))));
+	
+	printk("pgdir address is 0x%08x\n",pgdir);
+	printk("pgdir_init :   %d pages of kernel has been filled into the pd!\n",cnt);
+
 	/*
-	unsigned long* t = (unsigned long*)pgdir;
-    for (int i = 0; *(t + i) != 0; ++i) {
-		printk("%d    %d    %d\n",PDX(*(t + i)),PTX(*(t + i)),(*(t + i) & 0x3ff));
+	Pte* pte2;
+	struct Page* pp1;
+	try(page_alloc(&pp1));
+	try(pgdir_init_fill(pgdir,PPN2VA(page2ppn(pp1)),pp1));
+	int* t1 = (int*)page2addr(pp1);
+	*t1 = 100;
+	*(t1 + 1) = 200;
+	pgdir_walk(pgdir,PPN2VA(page2ppn(pp1)),0,&pte2);	
+	int * t2 =(int*)(((*pte2) >> 10 ) << 12);
+	for (int i = 0; *(t2 + i) != 0; ++i) {
+		printk("%d\n",*(t2 + i));
 	}
 	*/
+	
+	//return 0;	
+	Pte* pte,*pte1;
+	unsigned long* tt = (unsigned long*)pgdir;
+    for (int i = 0; *(tt + i) != 0; ++i) {
+		printk("0x%08x   %10b        %08x\n",*(tt + i),*(tt + i),((*(tt + i) >> 10) << 12));
+	}
+	printk("--------------\n");
+	/*
+	pgdir_walk(pgdir,0,0,&pte);
+	pgdir_walk(pgdir,(1 << 22),0,&pte1);
+	for (int i = 0; *(pte + i) != 0 && i < 1024 ; ++i) {
+		printk("%d    :    0x%08x",i,((*(pte +i) >> 10) << 12));
+		if (*(pte1 + i) != 0) {
+			printk("            : 0x%08x",((*(pte1 + i) >> 10) << 12));
+		}
+		printk("\n");
+	}
+	*/
+	return 0;
 }
 
 void physical_memory_manage_check() {

@@ -13,8 +13,7 @@
 #define PPN2VA(n) (((n >> PTSHIFT) << (PGSHIFT + PTSHIFT)) | (n << PGSHIFT))
 #define PTE_ADDR(pte) ((pte) & ~0x3ff)
 
-#define PPN(va) ((va) >> PTSHIFT) 
-
+#define PPN(addr) ((addr - KERNSTART) >> PGSHIFT)
 
 /* Page Table/Directory Entry flags */
 #define PTE_D (1 << 7) //1 if the PTE is written after D is reset
@@ -52,13 +51,9 @@ typedef u_long Pte;
 		}                                                                                  \
 	} while (0)
 
-#define VADDR(pa) 			\
+#define PADDR(pte) 			\
 	({						\
- 		u_long ppn = PPN(pa); 	\
-   		if (ppn >= npage){		\
-			panic("VADDR ppn >= npage!\n");	\
-	 	}							\
-		(pa) + KERNSTART;		\
+		((pte) >> PTSHIFT) << PGSHIFT;		\
 	})
 
 #endif //!__ASSEMBLER__

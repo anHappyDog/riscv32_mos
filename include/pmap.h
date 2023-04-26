@@ -27,10 +27,6 @@ static inline u_long page2sft(struct Page *pp) {
 	return page2ppn(pp) << PGSHIFT;
 }
 
-static inline u_long page2ptx(struct Page *pp) {
-	return page2ppn(pp) << PTSHIFT;
-}
-
 static inline struct Page *addr2page(u_long addr) {
 	if (PPN(addr) >= npage) {
 		panic("pa2page called with invalid ahdress: %x", addr);
@@ -41,6 +37,11 @@ static inline struct Page *addr2page(u_long addr) {
 static inline u_long page2addr(struct Page *pp) {
 	return page2sft(pp) + KERNSTART;
 }
+
+static inline u_long page2ptx(struct Page *pp) {
+	return ((page2addr(pp) >> PGSHIFT) << PTSHIFT);
+}
+
 static inline u_long va2pa(Pde *pgdir, u_long va) {
 	Pte *p;
 
@@ -48,7 +49,7 @@ static inline u_long va2pa(Pde *pgdir, u_long va) {
 	if (!(*pgdir & PTE_V)) {
 		return ~0;
 	}
-	p = (Pte *)VADDR(PTE_ADDR(*pgdir));
+	p = (Pte *)PADDR(PTE_ADDR(*pgdir));
 	if (!(p[PTX(va)] & PTE_V)) {
 		return ~0;
 	}
@@ -61,7 +62,7 @@ void mips_init(void);
 void page_init(void);
 void *alloc(u_int n, u_int align, int clear);
 
-void pgdir_init();
+int pgdir_init();
 
 int page_alloc(struct Page **pp);
 void page_free(struct Page *pp);
