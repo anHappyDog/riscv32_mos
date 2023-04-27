@@ -76,12 +76,12 @@ static int pgdir_init_fill(Pde* pgdir,u_long va,struct Page* p) {
 	pgdir_entryp = pgdir + PDX(va);
 	if (!((*pgdir_entryp) & PTE_V)) {
 		try(page_alloc(&pp));
-		*pgdir_entryp = page2ptx(pp) | PTE_D | PTE_V;
+		*pgdir_entryp = page2ptx(pp) | PTE_V;
 		pp->pp_ref += 1;
 	}
 	
 	pte = (Pte*)PADDR(PTE_ADDR(*pgdir_entryp)) + PTX(va);
-	*pte = page2ptx(p) | PTE_D | PTE_V | PTE_R;
+	*pte = page2ptx(p) | PTE_V | PTE_R | PTE_W | PTE_X;
 	return 0;
 }
 
@@ -96,7 +96,7 @@ static int pgdir_walk(Pde* pgdir, u_long va, int create, Pte** ppte) {
 			if (page_alloc(&pp) == -E_NO_MEM) {
 				return -E_NO_MEM;
 			}
-			*pgdir_entryp = page2ptx(pp) | PTE_V | PTE_D;
+			*pgdir_entryp = page2ptx(pp) | PTE_V;
 			pp->pp_ref += 1;
 		}
 		else {
@@ -117,9 +117,9 @@ int pgdir_init() {
 	pgdir = (Pde*)page2addr(pp0);
 	pp0->pp_ref = 1;
 	int cnt = 0;
-	for (int i = 0; i < npage; ++i) {
+	for (int i = 0; page2addr(&pages[i]) < KERNEND; ++i) {
 	//printk("the address is 0x%08x : 0x%08x\n",PPN2VA(i),page2addr(&pages[i]));
-		try(pgdir_init_fill(pgdir,PPN2VA(i),&pages[i]));
+		try(pgdir_init_fill(pgdir,page2addr(&pages[i]),&pages[i]));
 		++cnt;
 	}
 	//try(pgdir_init_fill(pgdir,PPN2VA(page2ppn(pp0)),pp0));
@@ -127,8 +127,24 @@ int pgdir_init() {
 	asm ("csrw satp, %0" : : "r"(((((unsigned long)pgdir) >> 12) | (1 << 31))));
 	asm ("sfence.vma");
 	printk("pgdir address is 0x%08x\n",pgdir);
-	printk("pgdir_init :   %d pages of kernel has been filled into the pd!\n",cnt);
-
+	printk("pgdir_init :   %d pages of kernel has been filled into the pd!\n",cnt);	
+	/*
+	Pte* sd = (int*)(0x83ffe000);
+	for (int i = 0; i < 1024; ++i) {
+		printk(" ---   0x%08x \n", ((*(sd + i) >> 10 ) << 12));
+	}
+	*/
+/*	
+	Pde* sd = (int*)(0x83fff000);
+	for (int i = 0; *(sd + i) != 0; ++i) {
+		printk("----------- 0x%08x -------\n",*(sd + i));
+		Pte* ttt = ((*(sd + i) >> 10 ) << 12);
+		printk("address : 0x%08x\n",ttt);
+		for (int j = 0;*(ttt + j) != 0; ++j) {
+			printk("0x%08x\n",((*(ttt + j) >> 10 ) << 12));
+		}
+	}
+/*	
 	/*
 	Pte* pte2;
 	struct Page* pp1;
@@ -145,7 +161,8 @@ int pgdir_init() {
 	*/
 	
 	//return 0;	
-	Pte* pte,*pte1;
+	/*
+		Pte* pte,*pte1;
 	unsigned long* tt = (unsigned long*)pgdir;
     for (int i = 0; *(tt + i) != 0; ++i) {
 		printk("0x%08x   %10b        %08x\n",*(tt + i),*(tt + i),((*(tt + i) >> 10) << 12));
@@ -161,7 +178,7 @@ int pgdir_init() {
 		}
 		printk("\n");
 	}
-	
+*/	
 	return 0;
 }
 
