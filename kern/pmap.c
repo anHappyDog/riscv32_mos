@@ -81,7 +81,7 @@ static int pgdir_init_fill(Pde* pgdir,u_long va,struct Page* p) {
 	}
 	
 	pte = (Pte*)PADDR(PTE_ADDR(*pgdir_entryp)) + PTX(va);
-	*pte = page2ptx(p) | PTE_D | PTE_V;
+	*pte = page2ptx(p) | PTE_D | PTE_V | PTE_R;
 	return 0;
 }
 
@@ -117,16 +117,15 @@ int pgdir_init() {
 	pgdir = (Pde*)page2addr(pp0);
 	pp0->pp_ref = 1;
 	int cnt = 0;
-	for (int i = 0; page2addr(&pages[i]) < KERNEND; ++i) {
+	for (int i = 0; i < npage; ++i) {
 	//printk("the address is 0x%08x : 0x%08x\n",PPN2VA(i),page2addr(&pages[i]));
 		try(pgdir_init_fill(pgdir,PPN2VA(i),&pages[i]));
 		++cnt;
 	}
 	//try(pgdir_init_fill(pgdir,PPN2VA(page2ppn(pp0)),pp0));
 	
-	asm ("sfence.vma");
 	asm ("csrw satp, %0" : : "r"(((((unsigned long)pgdir) >> 12) | (1 << 31))));
-	
+	asm ("sfence.vma");
 	printk("pgdir address is 0x%08x\n",pgdir);
 	printk("pgdir_init :   %d pages of kernel has been filled into the pd!\n",cnt);
 
@@ -152,7 +151,7 @@ int pgdir_init() {
 		printk("0x%08x   %10b        %08x\n",*(tt + i),*(tt + i),((*(tt + i) >> 10) << 12));
 	}
 	printk("--------------\n");
-	/*
+	
 	pgdir_walk(pgdir,0,0,&pte);
 	pgdir_walk(pgdir,(1 << 22),0,&pte1);
 	for (int i = 0; *(pte + i) != 0 && i < 1024 ; ++i) {
@@ -162,7 +161,7 @@ int pgdir_init() {
 		}
 		printk("\n");
 	}
-	*/
+	
 	return 0;
 }
 

@@ -10,7 +10,7 @@
 #define PTSHIFT 10
 #define PDX(va) ((((u_long)(va)) >> 22) & 0x03FF)
 #define PTX(va) ((((u_long)(va)) >> 12) & 0x03FF)
-#define PPN2VA(n) (((n >> PTSHIFT) << (PGSHIFT + PTSHIFT)) | (n << PGSHIFT))
+#define PPN2VA(n) (((n >> PTSHIFT) << (PGSHIFT + PTSHIFT)) | ((n % 1024)<< PGSHIFT))
 #define PTE_ADDR(pte) ((pte) & ~0x3ff)
 
 #define PPN(addr) ((addr - KERNSTART) >> PGSHIFT)
