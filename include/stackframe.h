@@ -4,13 +4,12 @@
 
 // clang-format off
 .macro SAVE_ALL
-.set noreorder
-.set noat
-	move    k0, sp
-.set reorder
+.option nopic
+	mv    k0, sp
+.option pic
 	bltz    sp, 1f
 	li      sp, KSTACKTOP
-.set noreorder
+.option nopic
 1:
 	subu    sp, sp, TF_SIZE
 	sw      k0, TF_REG29(sp)

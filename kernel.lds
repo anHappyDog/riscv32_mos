@@ -19,7 +19,10 @@ SECTIONS {
     }
     bss_end = .;
     . = 0x80600000;
-    end = . ;
+    .exc_gen_entry : {
+		*(.exc_gen_entry)
+	} 
+	end = . ;
 }
 
 

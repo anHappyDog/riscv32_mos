@@ -1,9 +1,12 @@
 #include <asm/asm.h>
+#include <asm/embdasm.h>
 #include <env.h>
 #include <kclock.h>
 #include <pmap.h>
 #include <printk.h>
 #include <trap.h>
+#include <sbi.h>
+
 
 // When build with 'make test lab=?_?', we will replace your 'mips_init' with a generated one from
 // 'tests/lab?_?'.
@@ -11,42 +14,25 @@
 #include <generated/init_override.h>
 #else
 
-void mips_init() {
-	printk("init.c:\tmips_init() is called\n");
+void riscv32_init() {
+	printk("init.c:\triscv32_init() is called\n");
 //	printk("%d   %08x\n",1,21231);
 //	char s1[100] = "asdsaddsadadad";
 //	printk("%s\n",s1);
-
 	// lab2:
-	mips_detect_memory();
-	mips_vm_init();
-	page_init();
-	//physical_memory_manage_check();
-	pgdir_init();
-	/*
-	extern struct Page* pages;
-	extern u_long npage;
+	
 
-	for (int i = 0; i < 100; ++i) {
-		printk("the page address is 0x%08x, the vaddr is 0x%08x \n",&pages[i],page2addr(&pages[i]));
-	}
-*/
-	/*
-	struct Page* pp,*pp1;
-	page_alloc(&pp);
-	assert(pp != NULL);
-	printk("--------------------------------------\n");
-	printk("the alloced page address is 0x%08x, the vaddr is 0x%08x \n",pp,page2addr(pp));
-	unsigned long * t1 = (unsigned long*)page2addr(pp);
-	*t1 = 100;
-	*(t1 + 1) = 200;
-	printk("-----------\n%d : %d\n---------\n",*t1,*(t1 + 1));
-	printk("-------------\n0x%08x : 0x%08x\n",t1,(t1 + 1));
-	page_alloc(&pp1);	
-	assert(pp1 != NULL);
-	printk("--------------------\n");
-	printk("the alloced page address is 0x%08x, the vaddr is 0x%08x \n",pp1,page2addr(pp1));	
-	*/
+	
+	riscv32_detect_memory();
+	page_init();
+	pgdir_init();
+	//SET_STVEC(0x80200000,0);
+	//SET_SSTATUS(1);
+	//SET_SIE(0,1,0);
+	//SBI_TIMER(1000 + RD_TIME());
+	env_init();
+	
+	while(1);
 	// lab3:
 	// env_init();
 	
@@ -70,10 +56,8 @@ void mips_init() {
 	// lab3:
 	// kclock_init();
 	// enable_irq();
-	while(1) {
-
-	}
 	//	halt();
+	SBI_SHUTDOWN();
 }
 
 #endif

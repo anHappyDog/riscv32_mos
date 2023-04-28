@@ -56,9 +56,8 @@ static inline u_long va2pa(Pde *pgdir, u_long va) {
 	return PTE_ADDR(p[PTX(va)]);
 }
 
-void mips_detect_memory(void);
-void mips_vm_init(void);
-void mips_init(void);
+void riscv32_detect_memory(void);
+void riscv32_init(void);
 void page_init(void);
 void *alloc(u_int n, u_int align, int clear);
 

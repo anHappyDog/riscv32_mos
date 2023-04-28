@@ -1,3 +1,4 @@
+#include<asm/embdasm.h>
 #include<pmap.h>
 #include<printk.h>
 #include<mmu.h>
@@ -10,7 +11,7 @@ static u_long freemem;
 
 struct Page_list page_free_list;
 
-void mips_detect_memory() {
+void riscv32_detect_memory() {
 //	memsize = csr_read(CSR_HGATP); 
 	memsize =  64 * 1024 * 1024;
 	npage = memsize / BY2PG ;
@@ -33,13 +34,10 @@ void* alloc(u_int n ,u_int align, int clear) {
 	return (void*)alloced_mem;
 }
 
-void mips_vm_init() {
-	pages = (struct Page*)alloc(npage * sizeof(struct Page),BY2PG,1);
-	printk("to memory %x for struct Pages.\n",freemem);
-	printk("pmap.c:\t mips vm init success\n");
-}
-
 void page_init() {
+
+	pages = (struct Page*)alloc(npage * sizeof(struct Page),BY2PG,1);
+	
 	LIST_INIT(&page_free_list);
 	freemem = ROUND(freemem,BY2PG);
 	for (int i = 0; i < npage; ++i) {
@@ -51,6 +49,10 @@ void page_init() {
 			LIST_INSERT_HEAD(&page_free_list,&pages[i],pp_link);
 		}
 	}
+	printk("to memory %x for struct Pages.\n",freemem);
+	printk("pmap.c:\t riscv32 page_init success\n");
+
+
 }
 
 int page_alloc(struct Page** new) {
@@ -69,6 +71,27 @@ void page_free(struct Page* pp) {
 	assert(pp->pp_ref == 0);
 	LIST_INSERT_HEAD(&page_free_list,pp,pp_link);
 }
+
+void page_decref(struct Page* pp) {
+	assert(pp->pp_ref > 0);
+	if (--pp->pp_ref == 0) {
+		page_free(pp);
+	}
+}
+
+
+void page_remove(Pde* pgdir, u_int asid, u_long va) {
+	Pte* pte;
+	struct Page* pp = page_lookup(pgdir,va,&pte);
+	if (pp == NULL) {
+		return;
+	}
+	page_decref(pp);
+	*pte = 0;
+	SET_TLB_FLUSH(va,asid,0);
+}
+
+
 static int pgdir_init_fill(Pde* pgdir,u_long va,struct Page* p) {
 	Pde* pgdir_entryp;
 	Pte* pte;
@@ -104,11 +127,45 @@ static int pgdir_walk(Pde* pgdir, u_long va, int create, Pte** ppte) {
 			return 0;
 		}
 	}
-	//printk("0x%08x\n",PTE_ADDR(*pgdir_entryp));
-	//printk("0x%08x\n",VADDR(PTE_ADDR(*pgdir_entryp)));
 	*ppte = (Pte*)PADDR(PTE_ADDR(*pgdir_entryp)) + PTX(va);
 	return 0;
 }
+
+struct Page* page_lookup(Pde* pgdir, u_long va, Pte** ppte) {
+	struct Page* pp;
+	Pte* pte;
+	pgdir_walk(pgdir, va,0,&pte);
+	if (pte == NULL || (*pte & PTE_V) == 0) {
+		return NULL;
+	}
+	pp = addr2page(((*pte) >> 10) << 12 );
+	if (ppte) {
+		*ppte = pte;
+	}
+	return pp;
+}
+
+int page_insert(Pde* pgdir, u_int asid, struct Page* pp, u_long va, u_int perm) {
+	Pte* pte;
+	pgdir_walk(pgdir,va,0,&pte);
+	if(pte && (*pte & PTE_V)) {
+		if (addr2page(PADDR(PTE_ADDR(*pte))) != pp) {
+			page_remove(pgdir,asid,va);
+		}
+		else {
+			SET_TLB_FLUSH(va,asid,0);
+			*pte = page2ptx(pp) | perm | PTE_V;
+			return 0;
+		}
+	}
+	SET_TLB_FLUSH(va,asid,0);
+	try(pgdir_walk(pgdir,va,1,&pte));
+	*pte = page2ptx(pp) | perm | PTE_V;
+	pp->pp_ref += 1;
+	return 0;	
+
+}
+
 
 int pgdir_init() {
 	Pde* pgdir;
@@ -117,68 +174,17 @@ int pgdir_init() {
 	pgdir = (Pde*)page2addr(pp0);
 	pp0->pp_ref = 1;
 	int cnt = 0;
-	for (int i = 0; page2addr(&pages[i]) < KERNEND; ++i) {
+	for (int i = 0; i < npage; ++i) {
 	//printk("the address is 0x%08x : 0x%08x\n",PPN2VA(i),page2addr(&pages[i]));
 		try(pgdir_init_fill(pgdir,page2addr(&pages[i]),&pages[i]));
 		++cnt;
 	}
-	//try(pgdir_init_fill(pgdir,PPN2VA(page2ppn(pp0)),pp0));
 	
-	asm ("csrw satp, %0" : : "r"(((((unsigned long)pgdir) >> 12) | (1 << 31))));
-	asm ("sfence.vma");
+	SET_SATP(1,0,((unsigned long)pgdir));	
+	SET_TLB_FLUSH(0,0,1);
 	printk("pgdir address is 0x%08x\n",pgdir);
 	printk("pgdir_init :   %d pages of kernel has been filled into the pd!\n",cnt);	
-	/*
-	Pte* sd = (int*)(0x83ffe000);
-	for (int i = 0; i < 1024; ++i) {
-		printk(" ---   0x%08x \n", ((*(sd + i) >> 10 ) << 12));
-	}
-	*/
-/*	
-	Pde* sd = (int*)(0x83fff000);
-	for (int i = 0; *(sd + i) != 0; ++i) {
-		printk("----------- 0x%08x -------\n",*(sd + i));
-		Pte* ttt = ((*(sd + i) >> 10 ) << 12);
-		printk("address : 0x%08x\n",ttt);
-		for (int j = 0;*(ttt + j) != 0; ++j) {
-			printk("0x%08x\n",((*(ttt + j) >> 10 ) << 12));
-		}
-	}
-/*	
-	/*
-	Pte* pte2;
-	struct Page* pp1;
-	try(page_alloc(&pp1));
-	try(pgdir_init_fill(pgdir,PPN2VA(page2ppn(pp1)),pp1));
-	int* t1 = (int*)page2addr(pp1);
-	*t1 = 100;
-	*(t1 + 1) = 200;
-	pgdir_walk(pgdir,PPN2VA(page2ppn(pp1)),0,&pte2);	
-	int * t2 =(int*)(((*pte2) >> 10 ) << 12);
-	for (int i = 0; *(t2 + i) != 0; ++i) {
-		printk("%d\n",*(t2 + i));
-	}
-	*/
-	
-	//return 0;	
-	/*
-		Pte* pte,*pte1;
-	unsigned long* tt = (unsigned long*)pgdir;
-    for (int i = 0; *(tt + i) != 0; ++i) {
-		printk("0x%08x   %10b        %08x\n",*(tt + i),*(tt + i),((*(tt + i) >> 10) << 12));
-	}
-	printk("--------------\n");
-	
-	pgdir_walk(pgdir,0,0,&pte);
-	pgdir_walk(pgdir,(1 << 22),0,&pte1);
-	for (int i = 0; *(pte + i) != 0 && i < 1024 ; ++i) {
-		printk("%d    :    0x%08x",i,((*(pte +i) >> 10) << 12));
-		if (*(pte1 + i) != 0) {
-			printk("            : 0x%08x",((*(pte1 + i) >> 10) << 12));
-		}
-		printk("\n");
-	}
-*/	
+
 	return 0;
 }
 

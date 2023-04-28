@@ -31,6 +31,14 @@
 #define KERNBASE 0x80200000
 #define KERNEND 0x80600000
 
+
+#define KSTACKTOP 0x80600000
+
+#define UPAGES 0x7f800000
+#define UENVS 0x7f400000
+
+
+
 #ifndef __ASSEMBLER__
 
 #include <string.h>
