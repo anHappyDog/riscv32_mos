@@ -4,6 +4,8 @@ target_dir              := target
 mos_elf                 := $(target_dir)/mos
 link_script             := kernel.lds
 
+
+user_modules			:= user/bare
 modules                 := lib init kern
 targets                 := $(mos_elf)
 
@@ -12,7 +14,9 @@ qemu32_files            += $(mos_elf)
 qemu32 					+= qemu-system-riscv32
 qemu32_flags            += -m 64M -machine virt -nographic
 
-objects                 := $(addsuffix /*.o, $(modules)) 
+objects                 := $(addsuffix /*.o, $(modules)) $(addsuffix /*.x, $(user_modules)) 
+modules                 += $(user_modules)
+
 
 .PHONY: all test tools $(modules) clean run gdb objdump  clean-and-all
 

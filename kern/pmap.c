@@ -9,6 +9,9 @@ u_long npage;
 struct Page* pages;
 static u_long freemem;
 
+Pde* cur_pgdir;
+Pde* root_pgdir;
+
 struct Page_list page_free_list;
 
 void riscv32_detect_memory() {
@@ -179,7 +182,8 @@ int pgdir_init() {
 		try(pgdir_init_fill(pgdir,page2addr(&pages[i]),&pages[i]));
 		++cnt;
 	}
-	
+	cur_pgdir = pgdir;	
+	root_pgdir = pgdir;
 	SET_SATP(1,0,((unsigned long)pgdir));	
 	SET_TLB_FLUSH(0,0,1);
 	printk("pgdir address is 0x%08x\n",pgdir);

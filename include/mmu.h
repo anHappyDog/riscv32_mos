@@ -33,11 +33,11 @@
 
 
 #define KSTACKTOP 0x80600000
-
+#define UVPT 0x7fc00000
 #define UPAGES 0x7f800000
 #define UENVS 0x7f400000
-
-
+#define UTOP 0x7f400000
+#define USTACKTOP (UTOP - 2 * BY2PG)
 
 #ifndef __ASSEMBLER__
 
@@ -61,7 +61,8 @@ typedef u_long Pte;
 
 #define PADDR(pte) 			\
 	({						\
-		((pte) >> PTSHIFT) << PGSHIFT;		\
+	 	u_long tt = (u_long)(pte);	\
+		((tt) >> PTSHIFT) << PGSHIFT;		\
 	})
 
 #endif //!__ASSEMBLER__

@@ -31,15 +31,11 @@ void riscv32_init() {
 	//SET_SIE(0,1,0);
 	//SBI_TIMER(1000 + RD_TIME());
 	env_init();
-	
-	while(1);
-	// lab3:
-	// env_init();
-	
-	// lab3:
-	// ENV_CREATE_PRIORITY(user_bare_loop, 1);
-	// ENV_CREATE_PRIORITY(user_bare_loop, 2);
-
+	//asm("ebreak" :: );	
+	//printk("ebreak ok !\n");
+	//env_check();	
+	ENV_CREATE_PRIORITY(user_bare_loop, 1);
+//	ENV_CREATE_PRIORITY(user_bare_loop, 2);
 	// lab4:
 	// ENV_CREATE(user_tltest);
 	// ENV_CREATE(user_fktest);
@@ -57,6 +53,8 @@ void riscv32_init() {
 	// kclock_init();
 	// enable_irq();
 	//	halt();
+	SBI_TIMER(200000 + RD_TIME());
+	while(1);
 	SBI_SHUTDOWN();
 }
 

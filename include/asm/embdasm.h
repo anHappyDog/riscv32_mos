@@ -36,11 +36,11 @@ do { 														\
 		"r"(((seip << 9) | (stip << 5) | (ssip << 1))));	\
 		} while(0)
 
-#define SET_SSTATUS(sie)                                    \
+#define SET_SSTATUS(sum,sie)                                \
 	do {													\
 		uint32_t x = RD_SSTATUS();							\
 		asm volatile ("csrw sstatus, %0" :: 				\
-			"r"(x | (sie << 1)));							\
+			"r"(x | (sie << 1) | (sum << 18)));				\
 		} while(0) 
 		
 #define RD_SSTATUS() 										\
