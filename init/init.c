@@ -36,6 +36,7 @@ void riscv32_init() {
 	//env_check();	
 	ENV_CREATE_PRIORITY(user_bare_loop, 1);
 //	ENV_CREATE_PRIORITY(user_bare_loop, 2);
+	ENV_CREATE_PRIORITY(user_bare_loop, 3);
 	// lab4:
 	// ENV_CREATE(user_tltest);
 	// ENV_CREATE(user_fktest);

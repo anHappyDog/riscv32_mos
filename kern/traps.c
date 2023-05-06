@@ -63,13 +63,13 @@ void do_timer_int(struct Trapframe* tf) {
 	//printk("ExcCode is %08x\n",tf->scause);
 	printk("go to schedule ....\n");
 	++kick;
-	if (kick == 11) {
+	if (kick == 20) {
 		panic("tick finish, tick is %d!\n",kick);
 		
 	}
 //	printk("---%d\n",RD_TIME());	
 	SBI_TIMER(2000000 + RD_TIME());
-	printk("%d\n",kick);
+	printk("%d : ",kick);
 	schedule(0);
 
 }
