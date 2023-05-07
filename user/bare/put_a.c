@@ -3,5 +3,9 @@
 
 void _start() {
 	//asm volatile ("ecall");
-	SBI_PUTCHAR('c');
+	for (unsigned i = 0; ; ++i) {
+		if (((i >>8) & 1) == 0) {
+			SBI_PUTCHAR('c');
+		}
+	}
 }

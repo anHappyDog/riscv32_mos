@@ -2,7 +2,7 @@
 #include<pmap.h>
 #include<printk.h>
 #include<mmu.h>
-
+#include<env.h>
 static u_long memsize;
 u_long npage;
 
@@ -52,8 +52,9 @@ void page_init() {
 			LIST_INSERT_HEAD(&page_free_list,&pages[i],pp_link);
 		}
 	}
+	printk("------------------------------------------------------------\n");
 	printk("to memory %x for struct Pages.\n",freemem);
-	printk("pmap.c:\t riscv32 page_init success\n");
+	printk("page_init success\n");
 
 
 }
@@ -95,7 +96,7 @@ void page_remove(Pde* pgdir, u_int asid, u_long va) {
 }
 
 
-static int pgdir_init_fill(Pde* pgdir,u_long va,struct Page* p) {
+static int pgdir_init_fill(Pde* pgdir,u_long va,struct Page* p,u_long perm) {
 	Pde* pgdir_entryp;
 	Pte* pte;
 	struct Page* pp;
@@ -107,7 +108,7 @@ static int pgdir_init_fill(Pde* pgdir,u_long va,struct Page* p) {
 	}
 	
 	pte = (Pte*)PADDR(PTE_ADDR(*pgdir_entryp)) + PTX(va);
-	*pte = page2ptx(p) | PTE_V | PTE_R | PTE_W | PTE_X;
+	*pte = page2ptx(p) | PTE_V | perm;
 	return 0;
 }
 
@@ -176,19 +177,32 @@ int pgdir_init() {
     try(page_alloc(&pp0));	
 	pgdir = (Pde*)page2addr(pp0);
 	pp0->pp_ref = 1;
-	int cnt = 0;
-	for (int i = 0; i < npage; ++i) {
+/*	for (int i = 0; i < npage; ++i) {
 	//printk("the address is 0x%08x : 0x%08x\n",PPN2VA(i),page2addr(&pages[i]));
 		try(pgdir_init_fill(pgdir,page2addr(&pages[i]),&pages[i]));
 		++cnt;
+	}*/
+	extern struct Env envs[NENV];
+	for (u_long addr = KERNSTART; addr < (u_long)envs; addr += BY2PG) {
+		try(pgdir_init_fill(pgdir,addr,addr2page(addr),PTE_R | PTE_X));
+	}
+	for (u_long addr = (u_long)envs; addr < KERNEND; addr += BY2PG) {
+		try(pgdir_init_fill(pgdir,addr,addr2page(addr),PTE_R | PTE_W));
+	}
+	for (u_long addr = KERNEND; addr < (u_long)pages; addr += BY2PG) {
+		try(pgdir_init_fill(pgdir,addr,addr2page(addr),PTE_R | PTE_X));
+	}
+	for (u_long addr = (u_long)pages; addr <=page2addr(&pages[npage - 1]); addr += BY2PG) {
+		try(pgdir_init_fill(pgdir,addr,addr2page(addr),PTE_R | PTE_W));
 	}
 	cur_pgdir = pgdir;	
 	root_pgdir = pgdir;
 	SET_SATP(1,0,((unsigned long)pgdir));	
 	SET_TLB_FLUSH(0,0,1);
-	printk("pgdir address is 0x%08x\n",pgdir);
-	printk("pgdir_init :   %d pages of kernel has been filled into the pd!\n",cnt);	
-
+	printk("------------------------------------------------------------------\n");
+	printk("root pgdir address is 0x%08x\n",pgdir);
+	printk("pgdir_init :   pgdir_init successfulls!\n");	
+	printk("------------------------------------------------------------------\n");
 	return 0;
 }
 

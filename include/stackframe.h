@@ -52,6 +52,7 @@ trap_from_user:
 		sw  s2,	    REG_SEPC(sp)
 		sw  s3,     REG_STVAL(sp)
 		sw  s4,		REG_SCAUSE(sp)
+		
 .endm
 
 

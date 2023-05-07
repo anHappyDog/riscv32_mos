@@ -16,7 +16,7 @@ extern void handle_software(void);
 extern void handle_timer(void);
 extern void handle_instruction_page(void);
 extern void handle_store_page(void);
-
+extern void handle_ecall_from_u(void);
 
 extern void schedule(int yield);
 
@@ -25,6 +25,7 @@ void (*exception_handlers[32])(void) = {
 	[17] = handle_software,
 	[21] = handle_timer,
 	[3] = handle_software,
+	[8] = handle_ecall_from_u,
 	[12] = handle_instruction_page,
 	[15] = handle_store_page,
 	/*	[0] = handle_int,
@@ -35,6 +36,12 @@ void (*exception_handlers[32])(void) = {
 void do_software_int(struct Trapframe* tf) {
 	printk("software_int is  ok!\n");
 	printk("ExcCode is %08x\n",tf->scause);
+
+}
+
+void do_ecall_from_u(struct Trapframe* tf) {
+	//printk("test.cccccc\n");
+	SBI_ECALL(tf->regs[17],tf->regs[10],tf->regs[11],tf->regs[12]);
 
 }
 
@@ -68,7 +75,7 @@ void do_timer_int(struct Trapframe* tf) {
 		
 	}
 //	printk("---%d\n",RD_TIME());	
-	SBI_TIMER(2000000 + RD_TIME());
+	SBI_TIMER(200000 + RD_TIME());
 	printk("%d : ",kick);
 	schedule(0);
 

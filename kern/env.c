@@ -88,6 +88,7 @@ void env_init(void) {
 	//asm("ebreak" :: );
 	printk("env_init : interrupt entry set at 0x%08x, mode is %d\n",KERNEND,0);
 	printk("env_init : timer interrupt in on !\n");
+	printk("---------------------------------------------------------------\n");
 	
 	LIST_INIT(&env_free_list);
 	TAILQ_INIT(&env_sched_list);
@@ -105,7 +106,10 @@ void env_init(void) {
 	map_segment(base_pgdir,0,KERNSTART,KERNSTART,ROUND(0x4000000,BY2PG),PTE_G | PTE_R | PTE_W | PTE_X);	
 	map_segment(base_pgdir,0,(u_long)pages,UPAGES,ROUND(npage * sizeof(struct Page),BY2PG),PTE_G |  PTE_R);
 	map_segment(base_pgdir,0,(u_long)envs,UENVS,ROUND(NENV * sizeof(struct Env),BY2PG), PTE_G | PTE_R);
+	
+	printk("envs's address is 0x%08x\n",envs);
 	printk("env_init : envs int finished !\n");
+	printk("---------------------------------------------------------------\n");
 }
 
 static int env_setup_vm(struct Env* e) {
@@ -145,7 +149,7 @@ int env_alloc(struct Env** new, u_int parent_id) {
 	e->env_tf.sstatus = ((1 << 1)|(1 << 18));
 	//give space for argc and argv
 	e->env_tf.regs[2] = USTACKTOP - sizeof(int) - sizeof(char**); 
-	
+		
 	LIST_REMOVE(e,env_link);
 	*new = e;
 	return 0;
@@ -248,7 +252,7 @@ void env_run(struct Env* e) {
 	//panic("test for 0x4000000,----\n");
 	SET_TLB_FLUSH(0,curenv->env_asid,1);
 	SET_SATP(1,curenv->env_asid,(unsigned long)cur_pgdir);	
-	env_pop_tf(&(curenv->env_tf),curenv->env_asid);
+	env_pop_tf((&(curenv->env_tf)),curenv->env_asid);
 }
 
 
