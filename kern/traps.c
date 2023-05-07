@@ -50,7 +50,7 @@ void do_store_page(struct Trapframe* tf) {
 	if (page_alloc(&pp) != 0) {
 		panic("alloc page failed!\n");
 	}
-	if (page_insert(curenv->env_pgdir,curenv->env_asid,pp,ROUNDDOWN(tf->stval,BY2PG),PTE_R | PTE_W | PTE_X | PTE_U) != 0) {
+	if (page_insert(curenv->env_pgdir,curenv->env_asid,pp,ROUNDDOWN(tf->stval,BY2PG),PTE_R | PTE_W | PTE_U) != 0) {
 		panic("insert page failed!\n");
 	}
 	printk("store page fault process well!\n");
