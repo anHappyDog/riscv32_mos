@@ -20,7 +20,7 @@ INCLUDES 		:= -I../../include
 
 .PHONY: all clean
 
-all: loop.x put_a.x overflow.x 
+all: loop.x put_a.x overflow.x
 
 clean:
 	rm -rf *.o *~ *.x *.b *.b.c

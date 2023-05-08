@@ -34,10 +34,11 @@ void riscv32_init() {
 	//asm("ebreak" :: );	
 	//printk("ebreak ok !\n");
 	//env_check();	
-	ENV_CREATE_PRIORITY(user_bare_loop, 1);
-	ENV_CREATE_PRIORITY(user_bare_loop, 2);
-	ENV_CREATE_PRIORITY(user_bare_loop, 3);
-	ENV_CREATE_PRIORITY(user_bare_loop, 4);
+	ENV_CREATE_PRIORITY(user_bare_test1,3);
+//	ENV_CREATE_PRIORITY(user_bare_loop, 1);
+//	ENV_CREATE_PRIORITY(user_bare_loop, 2);
+//	ENV_CREATE_PRIORITY(user_bare_loop, 3);
+//	ENV_CREATE_PRIORITY(user_bare_loop, 4);
 //	ENV_CREATE_PRIORITY(user_bare_put_a,2);
 	// lab4:
 	// ENV_CREATE(user_tltest);
