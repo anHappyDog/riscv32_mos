@@ -5,7 +5,7 @@ mos_elf                 := $(target_dir)/mos
 link_script             := kernel.lds
 
 
-user_modules			:= user/bare
+user_modules			:= user user/bare
 modules                 := lib init kern
 targets                 := $(mos_elf)
 

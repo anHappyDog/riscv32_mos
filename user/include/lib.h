@@ -48,10 +48,10 @@ void ecall_putchar(int ch);
 int ecall_print_cons(const void* str, u_int num);
 u_int ecall_getenvid(void);
 void ecall_yield(void);
-int ecall_env_destory(u_int envid);
+int ecall_env_destroy(u_int envid);
 int ecall_mem_alloc(u_int envid, void* va, u_int perm);
 int ecall_mem_map(u_int srcid, void* srcva,u_int dstid, void* dstva, u_int perm);
-int ECALL_mem_unmap(u_int envid, void* va);
+int ecall_mem_unmap(u_int envid, void* va);
 
 __attribute__((always_inline)) inline static int ecall_exofork(void) {
 	return mecall(ECALL_exofork,0,0,0,0,0);

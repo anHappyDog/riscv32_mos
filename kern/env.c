@@ -204,9 +204,10 @@ void env_free(struct Env* e) {
 			}
 		}
 		e->env_pgdir[pdeno] = 0;
-		page_decref(pa2page(pa));
+		page_decref(addr2page(pa));
 		SET_TLB_FLUSH(UVPT + (pdeno << PGSHIFT),e->env_asid,0);
 	}
+	
 	page_decref(addr2page((u_long)(e->env_pgdir)));	
 	asid_free(e->env_asid);
 	SET_TLB_FLUSH(UVPT + (PDX(UVPT) << PGSHIFT),e->env_asid,0);
@@ -216,7 +217,7 @@ void env_free(struct Env* e) {
 
 }
 
-void env_destory(struct Env* e) {
+void env_destroy(struct Env* e) {
 	env_free(e);
 	if (curenv == e) {
 		curenv = NULL;
@@ -227,6 +228,7 @@ void env_destory(struct Env* e) {
 
 extern void env_pop_tf(struct Trapframe* tf) __attribute__((noreturn));
 
+
 void env_run(struct Env* e) {
 	assert(e->env_status == ENV_RUNNABLE);
 	/*
@@ -236,13 +238,14 @@ void env_run(struct Env* e) {
 	curenv = e;
 	curenv->env_runs++;
 	cur_pgdir = curenv->env_pgdir;
-	printk("%08x  --- \n",curenv->env_id);
+	//printk("%08x  --- \n",curenv->env_id);
 	//Pte* t1;
  	//struct Page* ppp1 =  page_lookup(cur_pgdir,0x4000000,&t1);	
 	//printk("----%08x\n",*((u_int*)page2addr(ppp1)));
 	//panic("test for 0x4000000,----\n");
 	SET_TLB_FLUSH(0,curenv->env_asid,1);
 	SET_SATP(1,curenv->env_asid,(unsigned long)cur_pgdir);	
+
 	env_pop_tf((&(curenv->env_tf)));
 }
 

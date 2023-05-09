@@ -8,7 +8,6 @@ void schedule(int yield) {
 	--count;
 	if (e == NULL||((e != NULL) && (e->env_status != ENV_RUNNABLE))) {
 		e = TAILQ_FIRST(&env_sched_list);
-		count = e->env_pri;		
 	}
 	else if (yield != 0 || count <= 0) {
 		if (e->env_status == ENV_RUNNABLE) {
@@ -16,10 +15,10 @@ void schedule(int yield) {
 			TAILQ_INSERT_TAIL(&env_sched_list,e,env_sched_link);
 		}
 		e = TAILQ_FIRST(&env_sched_list);
-		count = e->env_pri;
 	}
 	if (e == NULL) {
 		panic("schedule : e is null !\n");
 	}
+	count = e->env_pri;		
 	env_run(e);
 }

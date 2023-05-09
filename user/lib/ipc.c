@@ -4,7 +4,7 @@
 
 void ipc_send(u_int whom, u_int val, const void* srcva, u_int perm) {
 	int r;
-	while ((r = ecall_ipc_try_send(whom,val,srca,perm)) == -E_IPC_NOT_RECV) {
+	while ((r = ecall_ipc_try_send(whom,val,srcva,perm)) == -E_IPC_NOT_RECV) {
 		ecall_yield();
 	}
 	user_assert(r == 0);

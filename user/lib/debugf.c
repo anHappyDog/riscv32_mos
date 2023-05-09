@@ -25,7 +25,7 @@ static void debug_output(void* data, const char* s, size_t l) {
 		memcpy(ctx->buf + ctx->pos, s,n);
 		s += n;
 		l -= n;
-		ctx->pos = BUG_LEN;
+		ctx->pos = BUF_LEN;
 		debug_flush(ctx);
 	}
 	memcpy(ctx->buf + ctx->pos, s, l);

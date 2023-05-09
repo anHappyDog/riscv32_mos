@@ -8,7 +8,7 @@ PHDRS {
 }
 
 SECTIONS {
-	. = 0x004000000;
+	. = 0x00400000;
 	
 	.text : {
 		*(.text)
@@ -20,7 +20,7 @@ SECTIONS {
 		*(.data)
 	} : data 
 	
-	.bss : {
+	.bss ALIGN(4096) : {
 		*(.bss)
 	} : data
 	end = .;

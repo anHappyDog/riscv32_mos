@@ -33,11 +33,18 @@
 
 
 #define KSTACKTOP 0x80600000
+#define ULIM 0x80000000
 #define UVPT 0x7fc00000
 #define UPAGES 0x7f800000
 #define UENVS 0x7f400000
 #define UTOP 0x7f400000
+#define UXSTACKTOP UTOP
 #define USTACKTOP (UTOP - 2 * BY2PG)
+#define UTEXT PDMAP
+#define UCOW (UTEXT - BY2PG)
+#define UTEMP (UCOW - BY2PG)
+
+
 
 #ifndef __ASSEMBLER__
 
@@ -64,6 +71,13 @@ typedef u_long Pte;
 	 	u_long tt = (u_long)(pte);	\
 		((tt) >> PTSHIFT) << PGSHIFT;		\
 	})
+
+#define TRUP(_p) 											\
+	({														\
+	 	typeof((_p)) __m_p = (_p);							\
+		(u_int) __m_p > ULIM ? (typeof(_p))ULIM : __m_p;	\
+	})
+
 
 #endif //!__ASSEMBLER__
 #endif // !_MMU_H_

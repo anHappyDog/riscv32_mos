@@ -24,6 +24,7 @@ FEXPORT(ret_from_exception)
 	sret
 
 
+BUILD_HANDLER load_page do_load_page
 BUILD_HANDLER ecall_from_u do_ecall_from_u
 BUILD_HANDLER reserved do_reserved
 BUILD_HANDLER instruction_page do_instruction_page

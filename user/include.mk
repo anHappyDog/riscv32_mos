@@ -7,5 +7,5 @@ USERLIB 				:=  entry.o \
 							ecall_lib.o	\
 							ipc.o		\
 
-
+INITAPPS := fktest.x
 USERLIB :=	$(addprefix lib/, $(USERLIB)) $(wildcard ../lib/*.o)

@@ -8,7 +8,7 @@ enum {
 	ECALL_print_cons,
 	ECALL_getenvid,
 	ECALL_yield,
-	ECALL_env_destory,
+	ECALL_env_destroy,
 	ECALL_mem_alloc,
 	ECALL_mem_map,
 	ECALL_mem_unmap,

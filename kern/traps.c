@@ -5,7 +5,7 @@
 #include <asm/embdasm.h>
 #include <sbi.h>
 #include <types.h>
-
+#include <ecall.h>
 
 extern void handle_int(void);
 extern void handle_tlb(void);
@@ -17,8 +17,12 @@ extern void handle_timer(void);
 extern void handle_instruction_page(void);
 extern void handle_store_page(void);
 extern void handle_ecall_from_u(void);
+extern void handle_load_page(void);
+
 
 extern void schedule(int yield);
+extern void* ecall_table[MAX_ENO];
+
 
 void (*exception_handlers[32])(void) = {
 	[0 ... 31] = handle_reserved,
@@ -27,12 +31,26 @@ void (*exception_handlers[32])(void) = {
 	[3] = handle_software,
 	[8] = handle_ecall_from_u,
 	[12] = handle_instruction_page,
+	[13] = handle_load_page,
 	[15] = handle_store_page,
 	/*	[0] = handle_int,
 	[1] = handle_tlb,
 	[2 ... 3] = handle_tlb,
 	[8] = handle_sys,*/
 };
+
+void do_load_page(struct Trapframe* tf) {
+	struct Page* pp;
+	if (page_alloc(&pp) != 0) {
+		panic("alloc page failed!\n");
+	}
+	if (page_insert(curenv->env_pgdir,curenv->env_asid,pp,ROUNDDOWN(tf->stval,BY2PG),PTE_R | PTE_W | PTE_U) != 0) {
+		panic("insert page failed!\n");
+	}
+	printk("load page process well!\n");
+}
+
+
 void do_software_int(struct Trapframe* tf) {
 	printk("software_int is  ok!\n");
 	printk("ExcCode is %08x\n",tf->scause);
@@ -40,10 +58,22 @@ void do_software_int(struct Trapframe* tf) {
 }
 
 void do_ecall_from_u(struct Trapframe* tf) {
-	//printk("test.cccccc\n");
-	SBI_ECALL(tf->regs[17],tf->regs[10],tf->regs[11],tf->regs[12]);
-
+	int (*func)(u_int, u_int, u_int, u_int, u_int);
+	int eno = tf->regs[10];
+    if (eno < 0 || eno >= MAX_ENO) {
+   		tf->regs[1] = -E_NO_E;
+    	return;
+	}	  
+	tf->sepc += 4;
+	func = ecall_table[eno];
+	u_int arg1 = tf->regs[11];
+	u_int arg2 = tf->regs[12];
+	u_int arg3 = tf->regs[13];
+	u_int arg4 = tf->regs[14];
+	u_int arg5 = tf->regs[15];
+	tf->regs[10] = func(arg1,arg2,arg3,arg4,arg5);
 }
+
 
 void do_store_page(struct Trapframe* tf) {
 	struct Page* pp;

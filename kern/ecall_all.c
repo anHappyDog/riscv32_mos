@@ -2,9 +2,10 @@
 #include <env.h>
 #include <mmu.h>
 #include <pmap.h>
-#include <printk.h>
 #include <sched.h>
 #include <ecall.h>
+#include <asm/embdasm.h>
+#include <drivers/console.h>
 
 extern struct Env* curenv;
 
@@ -14,8 +15,7 @@ void e_putchar(int c) {
 }
 
 int e_print_cons(const void* s,u_int num) {
-
-	for (i = 0; i < num; ++i) {
+	for (int i = 0; i < num; ++i) {
 		printcharc(((char*)s)[i]);
 	}
 	return 0;
@@ -39,6 +39,14 @@ int e_env_destroy(u_int envid) {
 }
 
 static inline int is_illegal_va(u_long va) {
+	return va < UTEMP || va >= UTOP;
+}
+
+static inline int is_illegal_va_range(u_long va, u_int len) {
+	if (len == 0) {
+		return 0;
+	}
+	return va + len < va || va < UTEMP || va + len > UTOP;
 
 }
 
@@ -85,7 +93,8 @@ int e_mem_unmap(u_int envid, u_int va) {
 int e_exofork(void) {
 	struct Env* e;
 	try(env_alloc(&e,curenv->env_id));
-	e->env_tf = ;
+	//context change KSTACKTOP
+	e->env_tf = *(((struct Trapframe*)RD_SSCRATCH()) - 1);
 	e->env_tf.regs[1] = 0;
 	e->env_status = ENV_NOT_RUNNABLE;
 	e->env_pri = curenv->env_pri;
@@ -108,39 +117,68 @@ int e_set_env_status(u_int envid, u_int status) {
 	return 0;
 }
 
-int e_set_trapframe(u_int envid, struct TrapFrame* tf) {
+int e_set_trapframe(u_int envid, struct Trapframe* tf) {
 	if (is_illegal_va_range((u_long)tf,sizeof(*tf))) {
 		return -E_INVAL;
 	}	
 	struct Env* env;
 	try(envid2env(envid,&env,1));
 	if (env == curenv) {
-	
+		*((struct Trapframe*)RD_SSCRATCH() - 1) = *tf;	
+		return tf->regs[1];
 	} else {
-		env->env_tf = ;
+		env->env_tf = *tf;
 		return 0;
 	}
 
 }
 
 int e_ipc_recv(u_int dstva) {
-
-
+	if (dstva != 0 && is_illegal_va(dstva)) {
+		return -E_INVAL;
+	}
+	curenv->env_ipc_recving = 1;
+	curenv->env_ipc_dstva = dstva;
+	curenv->env_status = ENV_NOT_RUNNABLE;
+	TAILQ_REMOVE(&env_sched_list,curenv,env_sched_link);
+	curenv->env_tf.regs[10] = 0;
+	schedule(1);
 }
 
 int e_ipc_try_send(u_int envid, u_int value, u_int srcva, u_int perm) {
-
-
-
+	struct Env* e;
+	struct Page* p;
+	if (srcva != 0 && is_illegal_va(srcva)) {
+		return -E_INVAL;
+	}
+	try(envid2env(envid,&e,0));
+	if (e->env_ipc_recving == 0) {
+		return -E_IPC_NOT_RECV;
+	}
+	e->env_ipc_value = value;
+	e->env_ipc_from = curenv->env_id;
+	e->env_ipc_perm = PTE_V | perm;
+	e->env_ipc_recving = 0;
+	e->env_status = ENV_RUNNABLE;
+	TAILQ_INSERT_TAIL(&env_sched_list,e,env_sched_link);
+	Pte* t;
+	if (srcva != 0) {
+		p = page_lookup(curenv->env_pgdir,srcva,&t);
+		if (p == NULL) {
+			return -E_INVAL;
+		}
+		page_insert(e->env_pgdir,e->env_asid,p,e->env_ipc_dstva,perm);
+	}
+	return 0;
 }
 
 int e_write_dev(u_int va, u_int pa, u_int len) {
-
+	return 0;
 
 }
 
 int e_read_dev(u_int va,u_int pa, u_int len) {
-
+	return 0;
 
 }
 
@@ -182,19 +220,4 @@ void* ecall_table[MAX_ENO] = {
 };
 
 
-void do_ecall(struct TrapFrame* tf) {
-	int (*func)(u_int, u_int, u_int, u_int, u_int);
-	int eno = tf->regs[10];
-    if (eno < 0 || eno >= MAX_ENO) {
-   		tf->regs[1] = -E_NO_E;
-    	return;
-	}	  
-	tf->sepc += 4;
-	func = ecall_table[eno];
-	u_int arg1 = tf->reg[11];
-	u_int arg2 = tf->reg[12];
-	u_int arg3 = tf->reg[13];
-	u_int arg4 = tf->reg[14];
-	u_int arg5 = tf->reg[15];
-	tf->regs[1] = func(arg1,arg2,arg3,arg4,arg5);
-}
+

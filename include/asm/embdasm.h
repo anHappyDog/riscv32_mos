@@ -71,4 +71,12 @@ do { 														\
 	x;														\
 	})
 
+#define RD_SSCRATCH()										\
+	({														\
+	 uint32_t x;											\
+	 asm volatile ("csrr %0, sscratch" : "=r"(x));			\
+	 x;														\
+	 })
+
+
 #endif

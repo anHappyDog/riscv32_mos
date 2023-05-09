@@ -20,8 +20,8 @@ void ecall_yield(void) {
 	mecall(ECALL_yield);
 }
 
-int ecall_env_destory(u_int envid) {
-	return mecall(ECALL_env_destory,envid);
+int ecall_env_destroy(u_int envid) {
+	return mecall(ECALL_env_destroy,envid);
 }
 
 int ecall_mem_alloc(u_int envid, void*va, u_int perm) {
@@ -45,7 +45,7 @@ int ecall_set_trapframe(u_int envid, struct Trapframe*tf) {
 }
 
 void ecall_panic(const char* msg) {
-	int t = mecall(ECALL_panic,msg);
+	int r = mecall(ECALL_panic,msg);
 	user_panic("ECALL_panic returned %d",r);
 }
 

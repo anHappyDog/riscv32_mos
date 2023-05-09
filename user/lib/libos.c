@@ -3,7 +3,7 @@
 #include <mmu.h>
 
 void exit(void) {
-	ecall_env_destory(0);
+	ecall_env_destroy(0);
 	user_panic("unreachable code");
 }
 
