@@ -1,5 +1,7 @@
 include include.mk
 
+lab						:= 4
+
 target_dir              := target
 mos_elf                 := $(target_dir)/mos
 link_script             := kernel.lds
@@ -23,6 +25,9 @@ modules                 += $(user_modules)
 .ONESHELL:
 clean-and-all: clean
 	$(MAKE) all
+
+test: export test_dir = tests/lab$(lab)
+test: clean-and-all
 
 
 include mk/tests.mk mk/profiles.mk

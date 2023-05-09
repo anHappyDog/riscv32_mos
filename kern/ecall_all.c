@@ -94,7 +94,7 @@ int e_exofork(void) {
 	struct Env* e;
 	try(env_alloc(&e,curenv->env_id));
 	//context change KSTACKTOP
-	e->env_tf = *(((struct Trapframe*)RD_SSCRATCH()) - 1);
+	e->env_tf = *((struct Trapframe*)RD_SSCRATCH());
 	e->env_tf.regs[1] = 0;
 	e->env_status = ENV_NOT_RUNNABLE;
 	e->env_pri = curenv->env_pri;
@@ -141,7 +141,8 @@ int e_ipc_recv(u_int dstva) {
 	curenv->env_ipc_dstva = dstva;
 	curenv->env_status = ENV_NOT_RUNNABLE;
 	TAILQ_REMOVE(&env_sched_list,curenv,env_sched_link);
-	curenv->env_tf.regs[10] = 0;
+	((struct Trapframe*)RD_SSCRATCH())->regs[10] = 0;
+	//curenv->env_tf.regs[10] = 0;
 	schedule(1);
 }
 

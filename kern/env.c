@@ -104,8 +104,8 @@ void env_init(void) {
 	//panic("-----%08x\n",ROUND((u_long)pages - 0x80200000,BY2PG));
 	//panic("------envs : %08x    pages : %08x\n",envs,pages);
 	map_segment(base_pgdir,0,KERNSTART,KERNSTART,ROUND(0x4000000,BY2PG),PTE_G | PTE_R | PTE_W | PTE_X);	
-	map_segment(base_pgdir,0,(u_long)pages,UPAGES,ROUND(npage * sizeof(struct Page),BY2PG),PTE_G |  PTE_R);
-	map_segment(base_pgdir,0,(u_long)envs,UENVS,ROUND(NENV * sizeof(struct Env),BY2PG), PTE_G | PTE_R);
+	map_segment(base_pgdir,0,(u_long)pages,UPAGES,ROUND(npage * sizeof(struct Page),BY2PG),PTE_G |  PTE_R | PTE_U);
+	map_segment(base_pgdir,0,(u_long)envs,UENVS,ROUND(NENV * sizeof(struct Env),BY2PG), PTE_G | PTE_R | PTE_U);
 	
 	printk("envs's address is 0x%08x\n",envs);
 	printk("env_init : envs int finished !\n");
@@ -231,10 +231,10 @@ extern void env_pop_tf(struct Trapframe* tf) __attribute__((noreturn));
 
 void env_run(struct Env* e) {
 	assert(e->env_status == ENV_RUNNABLE);
-	/*
+	
 	if(curenv) {
-		curenv->env_tf = *((struct Trapframe*)KSTACKTOP - 1);
-	}*/
+		curenv->env_tf = *((struct Trapframe*)RD_SSCRATCH());
+	}
 	curenv = e;
 	curenv->env_runs++;
 	cur_pgdir = curenv->env_pgdir;

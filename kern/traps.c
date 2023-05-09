@@ -47,7 +47,7 @@ void do_load_page(struct Trapframe* tf) {
 	if (page_insert(curenv->env_pgdir,curenv->env_asid,pp,ROUNDDOWN(tf->stval,BY2PG),PTE_R | PTE_W | PTE_U) != 0) {
 		panic("insert page failed!\n");
 	}
-	printk("load page process well!\n");
+//	printk("load page process well!\n");
 }
 
 
@@ -83,7 +83,7 @@ void do_store_page(struct Trapframe* tf) {
 	if (page_insert(curenv->env_pgdir,curenv->env_asid,pp,ROUNDDOWN(tf->stval,BY2PG),PTE_R | PTE_W | PTE_U) != 0) {
 		panic("insert page failed!\n");
 	}
-	printk("store page fault process well!\n");
+//	printk("store page fault process well!\n");
 }
 
 void do_instruction_page(struct Trapframe* tf) {
@@ -95,18 +95,18 @@ void do_instruction_page(struct Trapframe* tf) {
 
 
 void do_timer_int(struct Trapframe* tf) {
-	static int kick = 0;
+	//static int kick = 0;
 	//printk("ok!\n");	
 	//printk("ExcCode is %08x\n",tf->scause);
-	printk("go to schedule ....\n");
+	/*printk("go to schedule ....\n");
 	++kick;
 	if (kick == 20) {
 		panic("tick finish, tick is %d!\n",kick);
 		
-	}
+	}*/
 //	printk("---%d\n",RD_TIME());	
 	SBI_TIMER(200000 + RD_TIME());
-	printk("%d : ",kick);
+	//printk("%d : ",kick);
 	schedule(0);
 
 }

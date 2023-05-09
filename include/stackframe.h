@@ -41,8 +41,9 @@ trap_from_user:
 		sw t4,		REG_T4(sp)
 		sw t5,		REG_T5(sp)
 		sw t6,		REG_T6(sp)
-	
-		csrrw s0,sscratch, zero
+		
+	//	csrrw s0,sscratch sp
+		csrrw s0,sscratch, sp
 		csrr  s1, sstatus
 		csrr  s2, sepc
 		csrr  s3, stval
