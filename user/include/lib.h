@@ -9,8 +9,7 @@
 #include <ecall.h>
 #include <trap.h>
 
-#define vpt ((volatile Pte*)UVPT)
-//#define vpd ((volatile Pde*)(UVPT + (PDX(UVPT))))
+
 #define envs ((volatile struct Env*)UENVS)
 #define pages ((volatile struct Page*)UPAGES)
 
@@ -56,7 +55,7 @@ int ecall_mem_unmap(u_int envid, void* va);
 __attribute__((always_inline)) inline static int ecall_exofork(void) {
 	return mecall(ECALL_exofork,0,0,0,0,0);
 }
-
+int ecall_set_env_cow_entry(u_int envid,u_int cow_entry);
 int ecall_set_env_status(u_int envid, u_int status);
 int ecall_set_trapframe(u_int envid, struct Trapframe* tf);
 void ecall_panic(const char* msg) __attribute__((noreturn));

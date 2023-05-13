@@ -11,11 +11,16 @@
 #define PDX(va) ((((u_long)(va)) >> 22) & 0x03FF)
 #define PTX(va) ((((u_long)(va)) >> 12) & 0x03FF)
 #define PPN2VA(n) (((n >> PTSHIFT) << (PGSHIFT + PTSHIFT)) | ((n % 1024)<< PGSHIFT))
-#define PTE_ADDR(pte) ((pte) & ~0x3ff)
+#define PTE_ADDR(pte) (((pte) & ~0x3ff) & ~(0x3 << 30))
 
 #define PPN(addr) ((addr - KERNSTART) >> PGSHIFT)
+#define VPN(va)  (((u_long)(va)) >> PGSHIFT)
 
 /* Page Table/Directory Entry flags */
+
+#define PTE_LIBRARY (1 << 31) //1 if the PTE is shared by father and child's process
+#define PTE_COW (1 << 30) //1 if the PTE need to be copied when write
+
 #define PTE_D (1 << 7) //1 if the PTE is written after D is reset
 #define PTE_A (1 << 6) //1 if the PTE is accessed after A is reset
 #define PTE_G (1 << 5) //1 if the PTE is valuable to the whole address space

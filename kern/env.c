@@ -1,3 +1,4 @@
+
 #include <asm/embdasm.h>
 #include <elf.h>
 #include <env.h>
@@ -55,6 +56,19 @@ static void map_segment(Pde* pgdir, u_int asid, u_long pa, u_long va, u_int size
 
 }
 
+void reflect_pgdir(struct Env* e) {
+	u_int addr;	
+	map_segment(e->env_pgdir,e->env_asid,(u_long)(e->env_pgdir),(u_long)(e->env_pgdir),BY2PG,PTE_U | PTE_R | PTE_W);
+	for (int i = 0; i < 1024; ++i) {
+		if (e->env_pgdir[i] & PTE_V) {
+			addr = PADDR(PTE_ADDR(e->env_pgdir[i]));
+			map_segment(e->env_pgdir,e->env_asid,addr,addr,BY2PG, PTE_U | PTE_R | PTE_W);
+		}
+	}
+}
+
+
+
 u_int mkenvid(struct Env* e) {
 	static u_int i = 0;
 	return ((++i) << (1 + LOG2NENV)) | (e - envs);
@@ -103,7 +117,12 @@ void env_init(void) {
 	base_pgdir = (Pde*)page2addr(p);
 	//panic("-----%08x\n",ROUND((u_long)pages - 0x80200000,BY2PG));
 	//panic("------envs : %08x    pages : %08x\n",envs,pages);
-	map_segment(base_pgdir,0,KERNSTART,KERNSTART,ROUND(0x4000000,BY2PG),PTE_G | PTE_R | PTE_W | PTE_X);	
+	//map_segment(base_pgdir,0,KERNSTART,KERNSTART,ROUND(0x4000000,BY2PG),PTE_G |  PTE_R | PTE_W  |PTE_X);	
+	map_segment(base_pgdir,0,KERNSTART,KERNSTART,ROUND((u_long)envs - KERNSTART,BY2PG),PTE_G | PTE_R | PTE_X);
+	map_segment(base_pgdir,0,KERNEND,KERNEND,ROUND((u_long)pages - KERNEND,BY2PG),PTE_G | PTE_R | PTE_X);
+	map_segment(base_pgdir,0,(u_long)envs,(u_long)envs,ROUND(KERNEND - (u_long)envs,BY2PG),PTE_R | PTE_W);
+	map_segment(base_pgdir,0,(u_long)pages,(u_long)pages,ROUND(0x84000000 - (u_long)pages,BY2PG), PTE_R | PTE_W);
+	//map_segment(base_pgdir,0,(u_long)pages,(u_long)pages,ROUND(0x84000000 - (u_long)pages,BY2PG),PTE_R | PTE_W);
 	map_segment(base_pgdir,0,(u_long)pages,UPAGES,ROUND(npage * sizeof(struct Page),BY2PG),PTE_G |  PTE_R | PTE_U);
 	map_segment(base_pgdir,0,(u_long)envs,UENVS,ROUND(NENV * sizeof(struct Env),BY2PG), PTE_G | PTE_R | PTE_U);
 	
@@ -113,12 +132,25 @@ void env_init(void) {
 }
 
 static int env_setup_vm(struct Env* e) {
-	
+	//u_long addr;
 	struct Page* p;
 	try(page_alloc(&p));
 	p->pp_ref += 1;
 	e->env_pgdir = (Pte*)page2addr(p);
 	memcpy(e->env_pgdir,base_pgdir,BY2PG);
+	for (int i = 0; i < 10; ++i) {
+		p = NULL;
+		try(page_alloc(&p));
+		page_insert(e->env_pgdir,e->env_asid,p,UXSTACKTOP - (i + 1) * BY2PG,PTE_U | PTE_W | PTE_R);
+	}
+	/*
+	map_segment(e->env_pgdir,e->env_asid,(u_long)(e->env_pgdir),(u_long)(e->env_pgdir),BY2PG,PTE_U | PTE_R | PTE_W);
+	for (int i = 0; i < 1024; ++i) {
+		if (e->env_pgdir[i] & PTE_V) {
+			addr = PADDR(PTE_ADDR(e->env_pgdir[i]));
+			map_segment(e->env_pgdir,e->env_asid,addr,addr,BY2PG, PTE_U | PTE_R | PTE_W);
+		}
+	}*/
 	return 0;
 
 }
@@ -130,7 +162,7 @@ int env_alloc(struct Env** new, u_int parent_id) {
 		return -E_NO_FREE_ENV;
 	}
 	try(env_setup_vm(e));
-	e->env_user_tlb_mod_entry = 0;
+	e->env_cow_entry = 0;
 	e->env_runs = 0;
 	
 	e->env_id = mkenvid(e);
@@ -180,6 +212,7 @@ struct Env* env_create(const void* binary, size_t size, int priority) {
 	e->env_pri = priority;
 	e->env_status = ENV_RUNNABLE;
 	load_icode(e,binary,size);
+	reflect_pgdir(e);	
 	TAILQ_INSERT_HEAD(&env_sched_list,e,env_sched_link);	
 	return e;
 }

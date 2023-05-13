@@ -4,8 +4,14 @@
 #include<ecall.h>
 #include<trap.h>
 
+
+
 void ecall_putchar(int ch) {
 	mecall(ECALL_putchar,ch);
+}
+
+int ecall_get_pgdir(Pde** pde) {
+	return mecall(ECALL_get_pgdir,pde);
 }
 
 int ecall_print_cons(const void*str, u_int num) {
@@ -60,6 +66,11 @@ int ecall_ipc_recv(void* dstva) {
 int ecall_cgetc() {
 	return mecall(ECALL_cgetc);
 }	
+
+int ecall_set_env_cow_entry(u_int envid, u_int cow_entry) {
+	return mecall(ECALL_set_env_cow_entry,envid,cow_entry);
+}
+
 
 int ecall_write_dev(void* va, u_int dev, u_int len) {
 	return 0;

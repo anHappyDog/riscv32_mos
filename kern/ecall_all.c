@@ -93,11 +93,30 @@ int e_mem_unmap(u_int envid, u_int va) {
 int e_exofork(void) {
 	struct Env* e;
 	try(env_alloc(&e,curenv->env_id));
+	//memcpy(e->env_pgdir,cur_pgdir,BY2PG);	
 	//context change KSTACKTOP
-	e->env_tf = *((struct Trapframe*)RD_SSCRATCH());
-	e->env_tf.regs[1] = 0;
+	e->env_tf = *((struct Trapframe*)RD_SSCRATCH());	
+	e->env_tf.regs[10] = 0;
 	e->env_status = ENV_NOT_RUNNABLE;
 	e->env_pri = curenv->env_pri;
+	reflect_pgdir(e);
+	//Pte* pt;
+	//u_int addr,perm;
+	/*for (int i = VPN(USTACKTOP) - 1;i >= VPN(USTACKTOP) - 8; --i) {
+		pt = (Pte*)PADDR(PTE_ADDR(cur_pgdir[i >> 10])) + (i % 1024);
+		addr = i << PGSHIFT;
+		perm = (((*pt & 0xc00003ff) | PTE_COW) & ~ PTE_W);
+		e_mem_map(0, addr,e->env_id,addr,perm);
+		e_mem_map(0, addr,0,addr,perm);
+	}*/
+	//e_mem_map(curenv->env_id,(u_int)cur_pgdir,e->env_id,(u_int)cur_pgdir,PTE_U | PTE_R | PTE_COW);
+	/*for (int i = 0; i < 1024; ++i) {
+		if (cur_pgdir[i] & PTE_V) {
+			pt = (Pde*)PADDR(PTE_ADDR(cur_pgdir[i]));
+			e_mem_map(curenv->env_id,(u_int)pt,e->env_id,(u_int)pt,PTE_U | PTE_R | PTE_COW);
+		}
+	}*/
+
 	return e->env_id;
 }
 
@@ -124,7 +143,7 @@ int e_set_trapframe(u_int envid, struct Trapframe* tf) {
 	struct Env* env;
 	try(envid2env(envid,&env,1));
 	if (env == curenv) {
-		*((struct Trapframe*)RD_SSCRATCH() - 1) = *tf;	
+		*((struct Trapframe*)RD_SSCRATCH()) = *tf;	
 		return tf->regs[1];
 	} else {
 		env->env_tf = *tf;
@@ -198,13 +217,29 @@ int e_cgetc(void) {
 	return ch;
 }
 
+int e_set_env_cow_entry(u_int envid, u_int cow_entry) {
+	struct Env* e;
+	try(envid2env(envid,&e,1));
+	e->env_cow_entry = cow_entry;
+	return 0;
+}
+
+int e_get_pgdir(Pde** pde) {
+	if (curenv == NULL) {
+		return -E_INVAL;
+	}	
+	*pde = cur_pgdir;
+	return 0;
+}
+
+
 void* ecall_table[MAX_ENO] = {
 	[ECALL_putchar] = e_putchar,
 	[ECALL_print_cons] = e_print_cons,
 	[ECALL_getenvid] = e_getenvid,
 	[ECALL_yield] = e_yield,
 	[ECALL_env_destroy] = e_env_destroy,
-	
+	[ECALL_set_env_cow_entry] = e_set_env_cow_entry,	
 	[ECALL_mem_alloc] = e_mem_alloc,
 	[ECALL_mem_map] = e_mem_map,
 	[ECALL_mem_unmap] = e_mem_unmap,
@@ -215,6 +250,7 @@ void* ecall_table[MAX_ENO] = {
 	[ECALL_ipc_try_send] = e_ipc_try_send,
 	[ECALL_ipc_recv] = e_ipc_recv,
 	[ECALL_cgetc] = e_cgetc,
+	[ECALL_get_pgdir] = e_get_pgdir,
 	[ECALL_write_dev] = e_write_dev,
 	[ECALL_read_dev] = e_read_dev,
 

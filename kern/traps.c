@@ -40,10 +40,13 @@ void (*exception_handlers[32])(void) = {
 };
 
 void do_load_page(struct Trapframe* tf) {
-	struct Page* pp;
-	if (page_alloc(&pp) != 0) {
-		panic("alloc page failed!\n");
+	struct Page* pp = addr2page(tf->stval);
+	if (pp == NULL) {
+		try(page_alloc(&pp));
 	}
+	/*if (page_alloc(&pp) != 0) {
+		panic("alloc page failed!\n");
+	}*/
 	if (page_insert(curenv->env_pgdir,curenv->env_asid,pp,ROUNDDOWN(tf->stval,BY2PG),PTE_R | PTE_W | PTE_U) != 0) {
 		panic("insert page failed!\n");
 	}
@@ -77,12 +80,39 @@ void do_ecall_from_u(struct Trapframe* tf) {
 
 void do_store_page(struct Trapframe* tf) {
 	struct Page* pp;
+	Pte* pte1;
+	page_lookup(cur_pgdir,tf->stval,&pte1);
+	if ((*pte1 & PTE_COW) == PTE_COW) {
+		*((struct Trapframe*)UXSTACKTOP - 1) = *tf;
+
+		if (tf->regs[2] < USTACKTOP || tf->regs[2] >= UXSTACKTOP) {
+			tf->regs[2] = UXSTACKTOP;
+		}
+		tf->regs[2] -= 2 * sizeof(struct Trapframe);
+	    *(struct Trapframe*)tf->regs[2] = *tf;
+	
+		if(curenv->env_cow_entry) {
+			tf->regs[10] = tf->regs[2];
+			//tf->regs[2] -= sizeof(tf->regs[10]);	
+			tf->sepc = curenv->env_cow_entry;	
+		//	env_pop_tf(tf);
+		}
+		else {
+			panic("COW doesn't have cow_entry!\n");
+		}
+	}
+	else {
+		print_tf(tf);
+		panic("do_store_page doesn't have pte_cow\n");
+	}
+	/*
 	if (page_alloc(&pp) != 0) {
 		panic("alloc page failed!\n");
 	}
 	if (page_insert(curenv->env_pgdir,curenv->env_asid,pp,ROUNDDOWN(tf->stval,BY2PG),PTE_R | PTE_W | PTE_U) != 0) {
 		panic("insert page failed!\n");
 	}
+	*/
 //	printk("store page fault process well!\n");
 }
 
