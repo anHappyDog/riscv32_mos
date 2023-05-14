@@ -41,8 +41,8 @@ void (*exception_handlers[32])(void) = {
 
 void do_load_page(struct Trapframe* tf) {
 	struct Page* pp = addr2page(tf->stval);
-	if (pp == NULL) {
-		try(page_alloc(&pp));
+	if (pp == NULL && page_alloc(&pp) != 0) {
+		panic("load page : alloc failed!\n");
 	}
 	/*if (page_alloc(&pp) != 0) {
 		panic("alloc page failed!\n");
@@ -79,7 +79,6 @@ void do_ecall_from_u(struct Trapframe* tf) {
 
 
 void do_store_page(struct Trapframe* tf) {
-	struct Page* pp;
 	Pte* pte1;
 	page_lookup(cur_pgdir,tf->stval,&pte1);
 	if ((*pte1 & PTE_COW) == PTE_COW) {
