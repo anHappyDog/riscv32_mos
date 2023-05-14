@@ -5,22 +5,24 @@ lab						:= 4
 target_dir              := target
 mos_elf                 := $(target_dir)/mos
 link_script             := kernel.lds
-
+user_disk				:= $(target_dir)/fs.img
+dtb_file				:= $(target_dir)/virt.dtb
+dts_file				:= $(target_dir)/virt.dts
 
 user_modules			:= user user/bare
 modules                 := lib init kern
-targets                 := $(mos_elf)
+targets                 := $(mos_elf) fs-image 
 
 qemu32_gdb_flags 		+= -S -s
 qemu32_files            += $(mos_elf)
 qemu32 					+= qemu-system-riscv32
-qemu32_flags            += -m 64M -machine virt -nographic
+qemu32_flags            += -m 64M -nographic -machine virt
 
 objects                 := $(addsuffix /*.o, $(modules)) $(addsuffix /*.x, $(user_modules)) 
 modules                 += $(user_modules)
 
 
-.PHONY: all test tools $(modules) clean run gdb objdump  clean-and-all
+.PHONY: all test tools dts dtb fs-image  $(modules) clean run gdb objdump  clean-and-all
 
 .ONESHELL:
 clean-and-all: clean
@@ -47,6 +49,12 @@ $(modules): tools
 $(mos_elf): $(modules) $(target_dir)
 	$(LD) $(LDFLAGS) -o $(mos_elf) -N -T $(link_script) $(objects)
 
+fs-image: $(target_dir) user
+	$(MAKE) --directory=fs image fs-files="$(addprefix ../, $(fs-files))"
+
+fs: user
+user: lib
+
 
 clean:
 	for d in * tools/readelf user/* tests/*; do
@@ -59,6 +67,11 @@ clean:
 
 run:
 	$(qemu32) $(qemu32_flags)  -kernel $(qemu32_files)
+dts: dtb
+	dtc -I dtb -O dts $(dtb_file) > $(dts_file)
+
+dtb:
+	$(qemu32) $(qemu32_flags),dumpdtb=$(dtb_file) -kernel $(qemu32_files)
 gdb:
 	$(qemu32) $(qemu32_flags) $(qemu32_gdb_flags)  -kernel $(qemu32_files)
 gdbstart:

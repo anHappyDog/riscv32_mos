@@ -1,1 +1,1 @@
-targets  += bintoc
+targets  += bintoc fsformat
