@@ -6,19 +6,24 @@
  *
  *  This file is in the public domain.
  */
+#define RESET 0
+#define ACKNOWLEDGE 1
+#define DRIVER 2
+#define FAILED 128
+#define FEATHERS_OK 8
+#define DRIVER_OK 4
+#define DRIVER_NEEDS_RESET 64
 
-#define DEV_DISK_ADDRESS 0x13000000
-#define DEV_DISK_OFFSET 0x0000
-#define DEV_DISK_OFFSET_HIGH32 0x0008
-#define DEV_DISK_ID 0x0010
-#define DEV_DISK_START_OPERATION 0x0020
-#define DEV_DISK_STATUS 0x0030
-#define DEV_DISK_BUFFER 0x4000
+#define DEV_DISK_REGADDRESS 0x10008000
+#define DEV_DISK_STATUS 0x70
+#define DEV_DISK_MAGICVALUE 0x0
+#define DEV_DISK_DEVICEID 0x8
+#define DEV_DISK_DEVICEFEATHERS 0x10
 
-#define DEV_DISK_BUFFER_LEN 0x200
 
-/*  Operations:  */
-#define DEV_DISK_OPERATION_READ 0
-#define DEV_DISK_OPERATION_WRITE 1
+#define DEV_ADDR(base,offset)  *(int*)(base + offset)
+
+void disk_init(void);
+
 
 #endif /*  TESTMACHINE_DISK_H  */

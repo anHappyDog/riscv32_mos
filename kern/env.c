@@ -1,4 +1,4 @@
-
+#include <drivers/dev_disk.h>
 #include <asm/embdasm.h>
 #include <elf.h>
 #include <env.h>
@@ -125,7 +125,8 @@ void env_init(void) {
 	//map_segment(base_pgdir,0,(u_long)pages,(u_long)pages,ROUND(0x84000000 - (u_long)pages,BY2PG),PTE_R | PTE_W);
 	map_segment(base_pgdir,0,(u_long)pages,UPAGES,ROUND(npage * sizeof(struct Page),BY2PG),PTE_G |  PTE_R | PTE_U);
 	map_segment(base_pgdir,0,(u_long)envs,UENVS,ROUND(NENV * sizeof(struct Env),BY2PG), PTE_G | PTE_R | PTE_U);
-	
+	//map_segment(base_pgdir,0,DEV_DISK_REGADDRESS,DEV_DISK_REGADDRESS,BY2PG,PTE_R | PTE_W | PTE_G | PTE_LIBRARY);	
+	pgdir_map(base_pgdir,0,DEV_DISK_REGADDRESS,DEV_DISK_REGADDRESS,PTE_R | PTE_W | PTE_G | PTE_LIBRARY | PTE_U);
 	printk("envs's address is 0x%08x\n",envs);
 	printk("env_init : envs int finished !\n");
 	printk("---------------------------------------------------------------\n");
@@ -220,25 +221,30 @@ struct Env* env_create(const void* binary, size_t size, int priority) {
 void env_free(struct Env* e) {
 	Pte* pt;
 	u_int pdeno,pteno,pa;
+	int flag = 0;
 	printk("[%08x] free env %08x \n",curenv?curenv->env_id:0,e->env_id);
 	for (pdeno = 0; pdeno < PDX(UTOP); ++pdeno) {
-		
+		flag = 0;
 		if (!(e->env_pgdir[pdeno] & PTE_V)) {
 			continue;
 		}
-
 		pa = PADDR(PTE_ADDR(e->env_pgdir[pdeno]));
 		pt = (Pte*)pa;
-		
 		for (pteno = 0; pteno <= PTX(~0);++pteno) {
+			if (pt[pteno] & PTE_LIBRARY) {
+				flag = 1;
+				continue;
+			}
 			if (pt[pteno] & PTE_V) {
 				page_remove(e->env_pgdir,e->env_asid,
 						(pdeno <<  (PTSHIFT + PGSHIFT)) | (pteno << PGSHIFT));
 			}
 		}
-		e->env_pgdir[pdeno] = 0;
-		page_decref(addr2page(pa));
-		SET_TLB_FLUSH(UVPT + (pdeno << PGSHIFT),e->env_asid,0);
+		if (flag == 0) {
+			e->env_pgdir[pdeno] = 0;
+			page_decref(addr2page(pa));
+			SET_TLB_FLUSH(UVPT + (pdeno << PGSHIFT),e->env_asid,0);
+		}
 	}
 	
 	page_decref(addr2page((u_long)(e->env_pgdir)));	

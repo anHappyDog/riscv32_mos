@@ -44,6 +44,7 @@ int fork();
 extern int mecall(int,...);
 
 void ecall_putchar(int ch);
+int ecall_getchar(void);
 int ecall_print_cons(const void* str, u_int num);
 u_int ecall_getenvid(void);
 void ecall_yield(void);

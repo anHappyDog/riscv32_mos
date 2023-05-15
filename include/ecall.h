@@ -5,6 +5,7 @@
 
 enum {
 	ECALL_putchar,
+	ECALL_getchar,
 	ECALL_print_cons,
 	ECALL_getenvid,
 	ECALL_yield,

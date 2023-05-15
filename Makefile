@@ -17,6 +17,7 @@ qemu32_gdb_flags 		+= -S -s
 qemu32_files            += $(mos_elf)
 qemu32 					+= qemu-system-riscv32
 qemu32_flags            += -m 64M -nographic -machine virt
+disk_flags				:= -global virtio-mmio.force-legacy=false -drive file=$(user_disk),if=none,format=raw,id=hd -device virtio-blk-device,drive=hd
 
 objects                 := $(addsuffix /*.o, $(modules)) $(addsuffix /*.x, $(user_modules)) 
 modules                 += $(user_modules)
@@ -66,11 +67,11 @@ clean:
 	find . -name '*.objdump' -exec rm {} ';'
 
 run:
-	$(qemu32) $(qemu32_flags)  -kernel $(qemu32_files)
+	$(qemu32) $(qemu32_flags)  -kernel $(qemu32_files) $(disk_flags)
 dts: dtb
 	dtc -I dtb -O dts $(dtb_file) > $(dts_file)
 
-dtb:
+dtb:$(mos_elf)
 	$(qemu32) $(qemu32_flags),dumpdtb=$(dtb_file) -kernel $(qemu32_files)
 gdb:
 	$(qemu32) $(qemu32_flags) $(qemu32_gdb_flags)  -kernel $(qemu32_files)

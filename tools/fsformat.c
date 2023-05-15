@@ -250,11 +250,8 @@ int main(int argc, char** argv) {
 	for (int i = 2; i < argc; ++i) {
 		char* name = argv[i];
 		struct stat stat_buf;
-		printf("file %i is %s\n",i - 1,argv[i]);
+		//printf("file %i is %s\n",i - 1,argv[i]);
 		int r = stat(name,&stat_buf);
-		if (r != 0) {
-			printf("error code for stat is %3d\n",errno);
-		}
 		assert(r == 0);
 		if (S_ISDIR(stat_buf.st_mode)) {
 			printf("writing directory '%s' recursively into dist\n",name);

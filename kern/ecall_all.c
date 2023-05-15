@@ -14,6 +14,10 @@ void e_putchar(int c) {
 	return;
 }
 
+int e_getchar(void) {
+	return scancharc();
+}
+
 int e_print_cons(const void* s,u_int num) {
 	for (int i = 0; i < num; ++i) {
 		printcharc(((char*)s)[i]);
@@ -235,6 +239,7 @@ int e_get_pgdir(Pde** pde) {
 
 void* ecall_table[MAX_ENO] = {
 	[ECALL_putchar] = e_putchar,
+	[ECALL_getchar] = e_getchar,
 	[ECALL_print_cons] = e_print_cons,
 	[ECALL_getenvid] = e_getenvid,
 	[ECALL_yield] = e_yield,
@@ -253,7 +258,7 @@ void* ecall_table[MAX_ENO] = {
 	[ECALL_get_pgdir] = e_get_pgdir,
 	[ECALL_write_dev] = e_write_dev,
 	[ECALL_read_dev] = e_read_dev,
-
+	
 };
 
 

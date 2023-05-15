@@ -4,6 +4,7 @@
 
 #define SBI_SET_TIMER 0
 #define SBI_CONSOLE_PUTCHAR 1
+#define SBI_CONSOLE_GETCHAR 2
 #define SBI_SET_SHUTDOWN 8
 
 #define SBI_ECALL(__num, __a0, __a1, __a2)  \
@@ -20,9 +21,10 @@
 })
 
 
-#define SBI_ECALL_0(__num) SBI_ECALL(__num,0,0,0);
+#define SBI_ECALL_0(__num) SBI_ECALL(__num,0,0,0)
 #define SBI_ECALL_1(__num,__a0) SBI_ECALL(__num,__a0,0,0)
 #define SBI_PUTCHAR(__a0) SBI_ECALL_1(SBI_CONSOLE_PUTCHAR, __a0)
+#define SBI_GETCHAR() SBI_ECALL_0(SBI_CONSOLE_GETCHAR)
 #define SBI_TIMER(__a0) SBI_ECALL_1(SBI_SET_TIMER,__a0)
 #define SBI_SHUTDOWN() SBI_ECALL_0(SBI_SET_SHUTDOWN)
 #endif

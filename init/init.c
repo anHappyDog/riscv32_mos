@@ -1,3 +1,4 @@
+#include <drivers/dev_disk.h>
 #include <asm/asm.h>
 #include <asm/embdasm.h>
 #include <env.h>
@@ -21,15 +22,16 @@ void riscv32_init() {
 //	printk("%s\n",s1);
 	// lab2:
 	
-
-	
 	riscv32_detect_memory();
+	
 	page_init();
 	pgdir_init();
 	//SET_STVEC(0x80200000,0);
 	//SET_SSTATUS(1);
 	//SET_SIE(0,1,0);
 	//SBI_TIMER(1000 + RD_TIME());
+	disk_init();
+
 	env_init();
 	//env_check();
 	//asm("ebreak" :: );	
@@ -42,9 +44,10 @@ void riscv32_init() {
 //	ENV_CREATE_PRIORITY(user_bare_loop, 4);
 //	ENV_CREATE_PRIORITY(user_bare_put_a,2);
 	// lab4:
-	// ENV_CREATE(user_tltest);
+	 ENV_CREATE(user_test1);
 	//ENV_CREATE(user_bare_loop);
-	ENV_CREATE_PRIORITY(user_fktest,10);
+//	ENV_CREATE_PRIORITY(user_fktest,10);
+//	ENV_CREATE_PRIORITY(user_test1,10);
 //	ENV_CREATE_PRIORITY(user_fktest,10);
 //	ENV_CREATE_PRIORITY(user_fktest,10);
 //	ENV_CREATE(user_ppa);

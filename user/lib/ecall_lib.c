@@ -5,6 +5,10 @@
 #include<trap.h>
 
 
+int ecall_getchar(void) {
+	return mecall(ECALL_getchar);
+}
+
 
 void ecall_putchar(int ch) {
 	mecall(ECALL_putchar,ch);

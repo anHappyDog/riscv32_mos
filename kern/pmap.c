@@ -1,4 +1,5 @@
 #include<asm/embdasm.h>
+#include<drivers/dev_disk.h>
 #include<pmap.h>
 #include<printk.h>
 #include<mmu.h>
@@ -171,6 +172,16 @@ int page_insert(Pde* pgdir, u_int asid, struct Page* pp, u_long va, u_int perm) 
 }
 
 
+//only for device
+int pgdir_map(Pde* pgdir, u_int asid, u_long pa, u_long va, u_int perm) {
+	Pte* pte;
+	try(pgdir_walk(pgdir,va,1,&pte));
+	*pte = ((pa >> 12) << 10) | perm | PTE_V;
+	SET_TLB_FLUSH(va,asid,0);
+	return 0;
+}
+
+
 int pgdir_init() {
 	Pde* pgdir;
 	struct Page *pp0;
@@ -195,6 +206,8 @@ int pgdir_init() {
 	for (u_long addr = (u_long)pages; addr <=page2addr(&pages[npage - 1]); addr += BY2PG) {
 		try(pgdir_init_fill(pgdir,addr,addr2page(addr),PTE_R | PTE_W));
 	}
+	try(pgdir_map(pgdir,0,DEV_DISK_REGADDRESS,DEV_DISK_REGADDRESS,PTE_R | PTE_W));
+	//try(pgdir_init_fill(pgdir,DEV_DISK_REGADDRESS,,PTE_R | PTR_W);
 	cur_pgdir = pgdir;	
 	root_pgdir = pgdir;
 	SET_SATP(1,0,((unsigned long)pgdir));	
