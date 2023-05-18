@@ -74,7 +74,7 @@ dts: dtb
 dtb:$(mos_elf)
 	$(qemu32) $(qemu32_flags),dumpdtb=$(dtb_file) -kernel $(qemu32_files)
 gdb:
-	$(qemu32) $(qemu32_flags) $(qemu32_gdb_flags)  -kernel $(qemu32_files)
+	$(qemu32) $(qemu32_flags) $(qemu32_gdb_flags)  -kernel $(qemu32_files) $(disk_flags)
 gdbstart:
 	$(GDB) $(GDB_FLAGS) $(qemu32_files)
 

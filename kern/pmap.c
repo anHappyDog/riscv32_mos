@@ -1,5 +1,5 @@
 #include<asm/embdasm.h>
-#include<drivers/dev_disk.h>
+#include<drivers/virtio_blk.h>
 #include<pmap.h>
 #include<printk.h>
 #include<mmu.h>
@@ -59,6 +59,43 @@ void page_init() {
 
 
 }
+
+// alloc n pages which are sequent.
+int page_alloc_sequent(struct Page** new, int n) {
+	struct Page*pp,*first = NULL,*prev = NULL;
+	if (LIST_EMPTY(&page_free_list)) {
+		return -E_NO_MEM;
+	}
+	int flag = 0,cnt = 0;
+	LIST_FOREACH(pp,&page_free_list,pp_link) {
+		if (cnt > 0) {
+			if (page2addr(pp) != page2addr(prev) - BY2PG) {
+				cnt = 0;
+				first = pp;
+			}
+		}
+		else {
+			first = pp;
+		}
+		prev = pp;
+		++cnt;
+		if (cnt == n) {
+			flag = 1;
+			break;
+		}
+	}
+	if (!flag) {
+		return -E_NO_MEM;
+	}
+	for (first;first != pp->pp_link.le_next; first = prev->pp_link.le_next) {
+		LIST_REMOVE(first,pp_link);
+		memset((void*)page2addr(first),0,BY2PG);
+		first->pp_ref += 1;
+	}
+	*new = pp;
+	return 0;
+}
+
 
 int page_alloc(struct Page** new) {
 	struct Page* pp;
@@ -195,7 +232,7 @@ int pgdir_init() {
 	}*/
 	extern struct Env envs[NENV];
 	for (u_long addr = KERNSTART; addr < (u_long)envs; addr += BY2PG) {
-		try(pgdir_init_fill(pgdir,addr,addr2page(addr),PTE_R | PTE_X));
+ 		try(pgdir_init_fill(pgdir,addr,addr2page(addr),PTE_R | PTE_X | PTE_W ));
 	}
 	for (u_long addr = (u_long)envs; addr < KERNEND; addr += BY2PG) {
 		try(pgdir_init_fill(pgdir,addr,addr2page(addr),PTE_R | PTE_W));
@@ -218,6 +255,7 @@ int pgdir_init() {
 	printk("------------------------------------------------------------------\n");
 	return 0;
 }
+
 
 void physical_memory_manage_check() {
 	struct Page* pp,*pp0,*pp1,*pp2;

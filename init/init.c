@@ -1,4 +1,4 @@
-#include <drivers/dev_disk.h>
+#include <drivers/virtio_blk.h>
 #include <asm/asm.h>
 #include <asm/embdasm.h>
 #include <env.h>
@@ -7,7 +7,7 @@
 #include <printk.h>
 #include <trap.h>
 #include <sbi.h>
-
+#include <drivers/virtio.h>
 
 // When build with 'make test lab=?_?', we will replace your 'mips_init' with a generated one from
 // 'tests/lab?_?'.
@@ -31,7 +31,11 @@ void riscv32_init() {
 	//SET_SIE(0,1,0);
 	//SBI_TIMER(1000 + RD_TIME());
 	disk_init();
-
+	//disk_test();	
+/*	char buf[512];
+	read_sector(0,buf);
+	buf[512] = 0;
+	printk("---:%s:---\n",buf);*/
 	env_init();
 	//env_check();
 	//asm("ebreak" :: );	
@@ -44,7 +48,7 @@ void riscv32_init() {
 //	ENV_CREATE_PRIORITY(user_bare_loop, 4);
 //	ENV_CREATE_PRIORITY(user_bare_put_a,2);
 	// lab4:
-	 ENV_CREATE(user_test1);
+	// ENV_CREATE(user_test1);
 	//ENV_CREATE(user_bare_loop);
 //	ENV_CREATE_PRIORITY(user_fktest,10);
 //	ENV_CREATE_PRIORITY(user_test1,10);
@@ -54,6 +58,21 @@ void riscv32_init() {
 //	ENV_CREATE(user_ppa);
 
 	// ENV_CREATE(user_pingpong);
+	char *buf;
+	struct Page* pp;
+	page_alloc(&pp);
+	buf = page2addr(pp);	
+	for (int i = 0; i < 100; ++i) {
+		buf[i] = 'c';
+	}
+	buf[100] = 0;
+	disk_rw(0,1,buf);
+	memset(buf,0,512);
+	printk("::%s::\n",buf);
+	page_alloc(&pp);
+	buf = page2addr(pp);
+	disk_rw(0,0,buf);
+	printk("after read %s\n",buf);
 
 	// lab6:
 	// ENV_CREATE(user_icode);  // This must be the first env!
@@ -67,7 +86,7 @@ void riscv32_init() {
 	// kclock_init();
 	// enable_irq();
 	//	halt();
-	SBI_TIMER(200000 + RD_TIME());
+	//SBI_TIMER(200000 + RD_TIME());
 	while(1);
 	SBI_SHUTDOWN();
 }

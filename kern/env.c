@@ -1,4 +1,4 @@
-#include <drivers/dev_disk.h>
+#include <drivers/virtio_blk.h>
 #include <asm/embdasm.h>
 #include <elf.h>
 #include <env.h>

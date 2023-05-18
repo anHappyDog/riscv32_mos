@@ -74,6 +74,7 @@ int page_insert(Pde *pgdir, u_int asid, struct Page *pp, u_long va, u_int perm);
 struct Page *page_lookup(Pde *pgdir, u_long va, Pte **ppte);
 void page_remove(Pde *pgdir, u_int asid, u_long va);
 int pgdir_map(Pde* pgdir, u_int asid, u_long pa, u_long va, u_int perm);
+int page_alloc_sequent(struct Page** newp, int n);
 
 extern struct Page *pages;
 
