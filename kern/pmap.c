@@ -1,5 +1,5 @@
 #include<asm/embdasm.h>
-#include<drivers/virtio_blk.h>
+#include<drivers/virtio_disk.h>
 #include<pmap.h>
 #include<printk.h>
 #include<mmu.h>
@@ -243,7 +243,7 @@ int pgdir_init() {
 	for (u_long addr = (u_long)pages; addr <=page2addr(&pages[npage - 1]); addr += BY2PG) {
 		try(pgdir_init_fill(pgdir,addr,addr2page(addr),PTE_R | PTE_W));
 	}
-	try(pgdir_map(pgdir,0,DEV_DISK_REGADDRESS,DEV_DISK_REGADDRESS,PTE_R | PTE_W));
+	try(pgdir_map(pgdir,0,DISK_ADDRESS,DISK_ADDRESS,PTE_R | PTE_W));
 	//try(pgdir_init_fill(pgdir,DEV_DISK_REGADDRESS,,PTE_R | PTR_W);
 	cur_pgdir = pgdir;	
 	root_pgdir = pgdir;

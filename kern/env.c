@@ -1,4 +1,4 @@
-#include <drivers/virtio_blk.h>
+#include <drivers/virtio_disk.h>
 #include <asm/embdasm.h>
 #include <elf.h>
 #include <env.h>
@@ -126,7 +126,7 @@ void env_init(void) {
 	map_segment(base_pgdir,0,(u_long)pages,UPAGES,ROUND(npage * sizeof(struct Page),BY2PG),PTE_G |  PTE_R | PTE_U);
 	map_segment(base_pgdir,0,(u_long)envs,UENVS,ROUND(NENV * sizeof(struct Env),BY2PG), PTE_G | PTE_R | PTE_U);
 	//map_segment(base_pgdir,0,DEV_DISK_REGADDRESS,DEV_DISK_REGADDRESS,BY2PG,PTE_R | PTE_W | PTE_G | PTE_LIBRARY);	
-	pgdir_map(base_pgdir,0,DEV_DISK_REGADDRESS,DEV_DISK_REGADDRESS,PTE_R | PTE_W | PTE_G | PTE_LIBRARY | PTE_U);
+	//pgdir_map(base_pgdir,0,DEV_DISK_REGADDRESS,DEV_DISK_REGADDRESS,PTE_R | PTE_W | PTE_G | PTE_LIBRARY | PTE_U);
 	printk("envs's address is 0x%08x\n",envs);
 	printk("env_init : envs int finished !\n");
 	printk("---------------------------------------------------------------\n");
