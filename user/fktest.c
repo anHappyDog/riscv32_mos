@@ -12,7 +12,19 @@ int main() {
 		debugf("this is father\n");
 		ecall_yield();
 	}*/
-	int a = 0,id;
+	debugf("==----\n");
+	int c;
+	while ((c = ecall_getchar()) != '\r') {
+		if (c == '\b') {
+			ecall_putchar('\b');
+			ecall_putchar(' ');
+			ecall_putchar('\b');
+		} else {
+			ecall_putchar(c);
+		}
+	}
+	ecall_putchar('\n');
+/*	int a = 0,id;
 	debugf("fktest on ostest!\n");
 	if ((id = fork()) == 0) {
 		if ((id = fork()) == 0) {
@@ -37,6 +49,6 @@ int main() {
 	for (i = 0; i < 10; ++i) {
 		debugf("\t\t@this is father : a : %d\n",a);
 		ecall_yield();	
-	}	
+	}*/	
 	return 0;
 }
