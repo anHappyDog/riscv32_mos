@@ -87,7 +87,7 @@ struct virtio_blk_req {
 	_u32 type;
 	_u32 reserved;
 	_u64 sector;
-	_u8 *data;
+	_u8 data[512];
 	_u8 status;
 };
 
@@ -97,6 +97,7 @@ struct virtq_desc* desc;
 struct virtq_avail* avail;
 struct virtq_used* used;
 struct virtio_blk_req reqs[QUEUE_SIZE];
+_u8 last_seen_used;
 _u8 free;
 
 };

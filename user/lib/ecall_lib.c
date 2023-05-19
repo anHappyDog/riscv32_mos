@@ -5,6 +5,13 @@
 #include<trap.h>
 
 
+int ecall_getchar(void) {
+
+	return mecall(ECALL_getchar);
+
+}
+
+
 
 void ecall_putchar(int ch) {
 	mecall(ECALL_putchar,ch);
@@ -62,10 +69,6 @@ int ecall_ipc_try_send(u_int envid, u_int value, const void* srcva, u_int perm) 
 int ecall_ipc_recv(void* dstva) {
 	return mecall(ECALL_ipc_recv,dstva);
 }
-
-int ecall_cgetc() {
-	return mecall(ECALL_cgetc);
-}	
 
 int ecall_set_env_cow_entry(u_int envid, u_int cow_entry) {
 	return mecall(ECALL_set_env_cow_entry,envid,cow_entry);

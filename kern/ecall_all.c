@@ -9,6 +9,11 @@
 
 extern struct Env* curenv;
 
+
+u_int e_getchar(void) {
+	return scancharc();
+}
+
 void e_putchar(int c) {
 	printcharc((char)c);
 	return;
@@ -249,7 +254,7 @@ void* ecall_table[MAX_ENO] = {
 	[ECALL_panic] = e_panic,
 	[ECALL_ipc_try_send] = e_ipc_try_send,
 	[ECALL_ipc_recv] = e_ipc_recv,
-	[ECALL_cgetc] = e_cgetc,
+	[ECALL_getchar] = e_getchar,
 	[ECALL_get_pgdir] = e_get_pgdir,
 	[ECALL_write_dev] = e_write_dev,
 	[ECALL_read_dev] = e_read_dev,

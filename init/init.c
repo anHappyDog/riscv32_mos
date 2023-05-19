@@ -32,7 +32,7 @@ void riscv32_init() {
 	//SET_SIE(0,1,0);
 	//SBI_TIMER(1000 + RD_TIME());
 	env_init();
-	disk_init();
+	/*disk_init();
 
 	char buf[550];
 	for (int i = 0; i < 100;++i) {
@@ -41,8 +41,8 @@ void riscv32_init() {
 	buf[100] = 0;
 	disk_rw(0,1,buf);
 	memset(buf,0,550);
-	disk_rw(0,0,buf);
-	printk(":::%s;;;\n",buf);
+	disk_rw(0,0,buf);*/
+	/*printk(":::%s;;;\n",buf)*/;
 	//env_check();
 	//asm("ebreak" :: );	
 	//printk("ebreak ok !\n");
@@ -56,7 +56,7 @@ void riscv32_init() {
 	// lab4:
 	// ENV_CREATE(user_tltest);
 	//ENV_CREATE(user_bare_loop);
-//	ENV_CREATE_PRIORITY(user_fktest,10);
+	ENV_CREATE_PRIORITY(user_fktest,10);
 //	ENV_CREATE_PRIORITY(user_fktest,10);
 //	ENV_CREATE_PRIORITY(user_fktest,10);
 //	ENV_CREATE(user_ppa);
@@ -76,8 +76,8 @@ void riscv32_init() {
 	// kclock_init();
 	// enable_irq();
 	//	halt();
-	//SBI_TIMER(200000 + RD_TIME());
-	//while(1);
+	SBI_TIMER(200000 + RD_TIME());
+	while(1);
 	SBI_SHUTDOWN();
 }
 

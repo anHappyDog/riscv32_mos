@@ -44,6 +44,7 @@ int fork();
 extern int mecall(int,...);
 
 void ecall_putchar(int ch);
+int ecall_getchar();
 int ecall_print_cons(const void* str, u_int num);
 u_int ecall_getenvid(void);
 void ecall_yield(void);
@@ -62,7 +63,6 @@ int ecall_set_trapframe(u_int envid, struct Trapframe* tf);
 void ecall_panic(const char* msg) __attribute__((noreturn));
 int ecall_ipc_try_send(u_int envid, u_int value, const void* srcva, u_int perm);
 int ecall_ipc_recv(void* dstva);
-int ecall_cgetc();
 int ecall_write_dev(void*,u_int,u_int);
 int ecall_read_dev(void*,u_int,u_int);
 

@@ -19,7 +19,7 @@ enum {
 	ECALL_panic,
 	ECALL_ipc_try_send,
 	ECALL_ipc_recv,
-	ECALL_cgetc,
+	ECALL_getchar,
 	ECALL_get_pgdir,
 	ECALL_write_dev,
 	ECALL_read_dev,

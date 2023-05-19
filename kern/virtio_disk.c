@@ -122,7 +122,7 @@ void disk_rw(_u64 sector,int write,void*buf) {
 	else {
 		buf0->type = VIRTIO_BLK_T_IN;
 	}
-	buf0->data = buf;
+	//buf0->data = buf;
 	buf0->reserved = 0;
 	buf0->sector = sector;
 	buf0->status = 0x03;
@@ -151,6 +151,7 @@ void disk_rw(_u64 sector,int write,void*buf) {
 	disk.avail->ring[disk.avail->idx % QUEUE_SIZE] = idx[0];
 	__smp_wmb();
 	disk.avail->idx += 1;
+	disk.used->idx += 3;
 	__smp_rmb();
 	GET(DISK_ADDRESS,DISK_QUEUENOTIFY) = 0;
 	
@@ -161,7 +162,23 @@ void disk_rw(_u64 sector,int write,void*buf) {
 			break;
 		}
 	}
+	printk("::::%s::::\n",buf0->data);
 	printk("status is ::::%d::::\n",buf0->status);
-//	free_chain(idx);
+	printk("used elem id %08x\n",disk.used->ring[disk.used->idx - 1].id);
+	printk("used_elem %08x\n",disk.used->ring[disk.used->idx - 1].len);
+
+	//	free_chain(idx);
 }
+
+
+
+
+
+
+
+
+
+
+
+
 
