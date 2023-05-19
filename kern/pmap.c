@@ -1,3 +1,4 @@
+#include <drivers/virtio_disk.h>
 #include<asm/embdasm.h>
 #include<pmap.h>
 #include<printk.h>
@@ -169,7 +170,14 @@ int page_insert(Pde* pgdir, u_int asid, struct Page* pp, u_long va, u_int perm) 
 	return 0;	
 
 }
-
+//only for device
+int pgdir_map(Pde* pgdir, u_int asid, u_long pa, u_long va, u_int perm) {
+	Pte* pte;
+	try(pgdir_walk(pgdir,va,1,&pte));
+	*pte = ((pa >> 12) << 10) | perm | PTE_V;
+	SET_TLB_FLUSH(va,asid,0);
+	return 0;
+}
 
 int pgdir_init() {
 	Pde* pgdir;
@@ -195,6 +203,7 @@ int pgdir_init() {
 	for (u_long addr = (u_long)pages; addr <=page2addr(&pages[npage - 1]); addr += BY2PG) {
 		try(pgdir_init_fill(pgdir,addr,addr2page(addr),PTE_R | PTE_W));
 	}
+	try(pgdir_map(pgdir,0,DISK_ADDRESS,DISK_ADDRESS,PTE_R | PTE_W));	
 	cur_pgdir = pgdir;	
 	root_pgdir = pgdir;
 	SET_SATP(1,0,((unsigned long)pgdir));	
