@@ -8,7 +8,10 @@ int main() {
 		a[i] = 'a';
 	}
 	ecall_write_disk(0,0,a,1);
-	ecall_read_disk(0,32,a,1);
+	for (int i = 0; i  < 100 ; ++i) {
+		a[i] = 0;
+	}
+	ecall_read_disk(0,0,a,1);
 	debugf(":::%s:::\n",a);
 	//x = ecall_getchar();
 	/*while((x = ecall_getchar()) != '\r') {

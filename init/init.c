@@ -18,12 +18,14 @@ void riscv32_init() {
 	riscv32_detect_memory();
 	page_init();
 	pgdir_init();
-	env_init();
-	
 	disk_init();
-	/*char buf[550];
+	env_init();
+/*	
+	char buf[550];
 	disk_rw(32,0,buf,1);
-	printk(":::%s:::\n",buf);*/
+	printk(":::%s:::\n",buf);
+	disk_rw(0,1,buf,1);
+*/
 	ENV_CREATE(user_test1);
 	SBI_TIMER(200000 + RD_TIME());
 	while(1);

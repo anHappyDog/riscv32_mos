@@ -10,7 +10,7 @@
 #include <sbi.h>
 #define NASID 512
 
-
+extern struct virtqueue * disk;
 struct Env envs[NENV] __attribute__((aligned(BY2PG)));
 struct Env* curenv = NULL;
 static struct Env_list env_free_list;
@@ -126,6 +126,11 @@ void env_init(void) {
 	map_segment(base_pgdir,0,(u_long)pages,UPAGES,ROUND(npage * sizeof(struct Page),BY2PG),PTE_G |  PTE_R | PTE_U);
 	map_segment(base_pgdir,0,(u_long)envs,UENVS,ROUND(NENV * sizeof(struct Env),BY2PG), PTE_G | PTE_R | PTE_U);
 	//map_segment(base_pgdir,0,DEV_DISK_REGADDRESS,DEV_DISK_REGADDRESS,BY2PG,PTE_R | PTE_W | PTE_G | PTE_LIBRARY);	
+	map_segment(base_pgdir,0,(u_long)disk,(u_long)disk,BY2PG,PTE_G | PTE_R | PTE_W | PTE_LIBRARY);
+	map_segment(base_pgdir,0,(u_long)disk->desc,(u_long)disk->desc,BY2PG,PTE_G | PTE_R | PTE_W | PTE_LIBRARY);
+	map_segment(base_pgdir,0,(u_long)disk->avail,(u_long)disk->avail,BY2PG,PTE_G | PTE_R | PTE_W | PTE_LIBRARY);
+	map_segment(base_pgdir,0,(u_long)disk->used,(u_long)disk->used,BY2PG,PTE_G | PTE_R | PTE_W | PTE_LIBRARY);
+	
 	pgdir_map(base_pgdir,0,DISK_ADDRESS,DISK_ADDRESS,PTE_R | PTE_W | PTE_G | PTE_LIBRARY);
 	printk("envs's address is 0x%08x\n",envs);
 	printk("env_init : envs int finished !\n");

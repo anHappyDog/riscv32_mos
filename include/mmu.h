@@ -18,9 +18,8 @@
 
 /* Page Table/Directory Entry flags */
 
-#define PTE_LIBRARY (1 << 31) //1 if the PTE is shared by father and child's process
-#define PTE_COW (1 << 30) //1 if the PTE need to be copied when write
-
+#define PTE_LIBRARY (1 << 9) //1 if the PTE is shared by father and child's process
+#define PTE_COW (1 << 8) //1 if the PTE need to be copied when write
 #define PTE_D (1 << 7) //1 if the PTE is written after D is reset
 #define PTE_A (1 << 6) //1 if the PTE is accessed after A is reset
 #define PTE_G (1 << 5) //1 if the PTE is valuable to the whole address space
