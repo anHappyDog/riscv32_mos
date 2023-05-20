@@ -21,22 +21,12 @@ void riscv32_init() {
 	env_init();
 	
 	disk_init();
-	char buf[550];
-	for (int i = 0; i < 100; ++i) {
-		buf[i] = 'c';
-	}
-	//	buf[0] = 'c';
-	buf[100] = 0;
-	disk_rw(1,1,buf);
-	//disk_rw(1,1,buf);
-	//disk_rw(1,1,buf);
-	//disk_rw(1,1,buf);
-	memset(buf,0,550);
-	//printk("before::%s\n",buf);
-	disk_rw(1,0,buf);
-	printk(":::\n%s\n:::\n",buf);
-//	SBI_TIMER(200000 + RD_TIME());
-	//while(1);
+	/*char buf[550];
+	disk_rw(32,0,buf,1);
+	printk(":::%s:::\n",buf);*/
+	ENV_CREATE(user_test1);
+	SBI_TIMER(200000 + RD_TIME());
+	while(1);
 	
 	SBI_SHUTDOWN();
 }

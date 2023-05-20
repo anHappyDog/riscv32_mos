@@ -66,6 +66,8 @@ int ecall_ipc_recv(void* dstva);
 int ecall_cgetc();
 int ecall_write_dev(void*,u_int,u_int);
 int ecall_read_dev(void*,u_int,u_int);
+void ecall_write_disk(uint32_t lowsec,uint32_t highsec,void*buf,int nsec); 
+void ecall_read_disk(uint32_t lowsec,uint32_t highsec,void*buf,int nsec); 
 
 void ipc_send(u_int whom,u_int val, const void* srcva, u_int perm);
 u_int ipc_recv(u_int* whom, void* dstva, u_int* perm);

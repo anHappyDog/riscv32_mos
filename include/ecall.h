@@ -24,6 +24,8 @@ enum {
 	ECALL_get_pgdir,
 	ECALL_write_dev,
 	ECALL_read_dev,
+	ECALL_read_disk,
+	ECALL_write_disk,
 	MAX_ENO,	
 
 };

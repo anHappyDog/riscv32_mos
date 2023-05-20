@@ -4,6 +4,13 @@
 #include<ecall.h>
 #include<trap.h>
 
+void ecall_read_disk(uint32_t lowsec,uint32_t highsec,void*buf,int nsec) {
+	mecall(ECALL_read_disk,lowsec,highsec,buf,nsec);
+}
+
+void ecall_write_disk(uint32_t lowsec,uint32_t highsec,void*buf,int nsec) {
+	mecall(ECALL_write_disk,lowsec,highsec,buf,nsec);
+}
 
 int ecall_getchar(void) {
 	return mecall(ECALL_getchar);

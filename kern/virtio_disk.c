@@ -113,7 +113,7 @@ static void free_chain(_u32* idx) {
 }
 
 
-void disk_rw(_u64 sector,int write,void*buf) {
+static void disk_rw_sector(_u64 sector,int write,void*buf) {
 	_u32 idx[3];
 	if (alloc_3desc(idx) == -1) {
 		panic("disk_rw alloc 3 idx failed!\n");
@@ -173,7 +173,11 @@ void disk_rw(_u64 sector,int write,void*buf) {
 	free_chain(idx);
 }
 
-
+void disk_rw(_u64 sector,int write,void*buf,int nsecs) {
+	for (int i = 0; i < nsecs; ++i) {
+		disk_rw_sector(sector + i,write,buf + SECTOR_SIZE * i);	
+	}
+}
 
 
 
