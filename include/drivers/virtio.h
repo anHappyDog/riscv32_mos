@@ -2,6 +2,15 @@
 #define __VIRTIO_H_
 #include <drivers/virtio_types.h>
 
+
+
+
+#define DISK_DESC_ADDRESS 0xf0000000
+#define DISK_AVAIL_ADDRESS 0xf0001000
+#define DISK_USED_ADDRESS 0xf0002000
+
+
+
 #define RESET 0x0
 #define ACKNOWLEDGE 0x01
 #define DRIVER 0x02
@@ -28,7 +37,7 @@
 
 #define GET(bs,addr) *(_u32*)(bs + addr)
 
-#define QUEUE_SIZE 128
+#define QUEUE_SIZE 8
 
 
 //for virtq_desc flags;

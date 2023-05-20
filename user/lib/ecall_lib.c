@@ -4,6 +4,13 @@
 #include<ecall.h>
 #include<trap.h>
 
+void ecall_interrupt_on() {
+	mecall(ECALL_interrupt_on);
+}
+
+void ecall_interrupt_off() {
+	mecall(ECALL_interrupt_off);
+}
 
 int ecall_getchar(void) {
 	return mecall(ECALL_getchar);

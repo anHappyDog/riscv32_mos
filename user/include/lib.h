@@ -57,6 +57,10 @@ int ecall_get_pgdir(Pde** pde);
 __attribute__((always_inline)) inline static int ecall_exofork(void) {
 	return mecall(ECALL_exofork,0,0,0,0,0);
 }
+
+void ecall_interrupt_on();
+void ecall_interrupt_off();
+
 int ecall_set_env_cow_entry(u_int envid,u_int cow_entry);
 int ecall_set_env_status(u_int envid, u_int status);
 int ecall_set_trapframe(u_int envid, struct Trapframe* tf);

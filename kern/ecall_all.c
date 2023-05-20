@@ -9,6 +9,15 @@
 
 extern struct Env* curenv;
 
+void e_interrupt_on() {
+	SET_SIE(1,1,1);
+}
+
+void e_interrupt_off() {
+	SET_SIE(0,0,0);
+}
+
+
 void e_putchar(int c) {
 	printcharc((char)c);
 	return;
@@ -57,9 +66,9 @@ static inline int is_illegal_va_range(u_long va, u_int len) {
 int e_mem_alloc(u_int  envid, u_int va, u_int perm) {
 	struct Env* env;
 	struct Page* pp;
-	if (is_illegal_va(va)) {
+	/*if (is_illegal_va(va)) {
 		return -E_INVAL;
-	}
+	}*/
 	try(envid2env(envid,&env,1));
 	try(page_alloc(&pp));
 	return page_insert(env->env_pgdir,env->env_asid,pp,va,perm);
@@ -258,7 +267,8 @@ void* ecall_table[MAX_ENO] = {
 	[ECALL_get_pgdir] = e_get_pgdir,
 	[ECALL_write_dev] = e_write_dev,
 	[ECALL_read_dev] = e_read_dev,
-	
+	[ECALL_interrupt_on] = e_interrupt_on,
+	[ECALL_interrupt_off] = e_interrupt_off,	
 };
 
 
