@@ -18,6 +18,7 @@
 
 /* Page Table/Directory Entry flags */
 
+#define PTE_DIRTY (1 << 30)
 #define PTE_LIBRARY (1 << 9) //1 if the PTE is shared by father and child's process
 #define PTE_COW (1 << 8) //1 if the PTE need to be copied when write
 #define PTE_D (1 << 7) //1 if the PTE is written after D is reset
@@ -48,6 +49,21 @@
 #define UCOW (UTEXT - BY2PG)
 #define UTEMP (UCOW - BY2PG)
 
+
+#define GET_VPT(pgdir,va) 				\
+({										\
+	Pde* entryp = (Pde*)pgdir + PDX(va);\
+	user_assert(entryp != 0);			\
+	Pte* pte = (Pte*)((*entryp >> 10) << 12) + PTX(va);	\
+	user_assert(pte != 0);				\
+	*pte;								\
+})
+
+#define IS_VAL(pgdir,va)				\
+({										\
+	Pte pte = GET_VPT(pgdir,va);	    \
+	pte & PTE_V; 						\
+})
 
 
 #ifndef __ASSEMBLER__

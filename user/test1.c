@@ -2,7 +2,7 @@
 
 int main() {
 	debugf("getchar test:\n");
-	char a[550];
+	/*char a[550];
 	int x = 0,cnt = 0;
 	for (int i = 0; i  < 100 ; ++i) {
 		a[i] = 'a';
@@ -12,7 +12,7 @@ int main() {
 		a[i] = 0;
 	}
 	ecall_read_disk(0,0,a,1);
-	debugf(":::%s:::\n",a);
+	debugf(":::%s:::\n",a);*/
 	//x = ecall_getchar();
 	/*while((x = ecall_getchar()) != '\r') {
 		if (x > 0) {

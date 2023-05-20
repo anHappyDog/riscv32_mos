@@ -9,7 +9,7 @@ user_disk				:= $(target_dir)/fs.img
 dtb_file				:= $(target_dir)/virt.dtb
 dts_file				:= $(target_dir)/virt.dts
 
-user_modules			:= user user/bare
+user_modules			:= user user/bare fs
 modules                 := lib init kern
 targets                 := $(mos_elf) fs-image 
 

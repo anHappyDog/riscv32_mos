@@ -87,10 +87,10 @@ int page_alloc_sequent(struct Page** new, int n) {
 	if (!flag) {
 		return -E_NO_MEM;
 	}
-	for (first;first != pp->pp_link.le_next; first = prev->pp_link.le_next) {
-		LIST_REMOVE(first,pp_link);
-		memset((void*)page2addr(first),0,BY2PG);
-		first->pp_ref += 1;
+	for (struct Page* t = first;t != pp->pp_link.le_next; t = t->pp_link.le_next) {
+		LIST_REMOVE(t,pp_link);
+		memset((void*)page2addr(t),0,BY2PG);
+		t->pp_ref += 1;
 	}
 	*new = pp;
 	return 0;
