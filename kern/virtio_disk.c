@@ -113,7 +113,7 @@ static void free_chain(_u32* idx) {
 }
 
 
-void disk_rw(_u64 sector,int write,void*buf) {
+void disk_rw_sector(_u64 sector,int write,void*buf) {
 	_u32 idx[3];
 	if (alloc_3desc(idx) == -1) {
 		panic("disk_rw alloc 3 idx failed!\n");
@@ -158,7 +158,7 @@ void disk_rw(_u64 sector,int write,void*buf) {
 	GET(DISK_ADDRESS,DISK_QUEUENOTIFY) = 0;
 
 	while (1) {
-		printk("INTERRUPT_STATUS %08x\n",GET(DISK_ADDRESS,DISK_INTERRUPT_STATUS));
+	//	printk("INTERRUPT_STATUS %08x\n",GET(DISK_ADDRESS,DISK_INTERRUPT_STATUS));
 		GET(DISK_ADDRESS,DISK_INTERRUPT_ACK) = GET(DISK_ADDRESS,DISK_INTERRUPT_STATUS) & 0x03;
 		if (buf0->status != 0x03) {
 			break;
@@ -167,14 +167,18 @@ void disk_rw(_u64 sector,int write,void*buf) {
 
 	printk("status is ::::%d::::\n",buf0->status);
 //	printk("::::%s::::\n",buf0->data);
-	printk("used elem id %08x\n",disk.used->ring[disk.used->idx - 1].id);
-	printk("used_elem %08x\n",disk.used->ring[disk.used->idx - 1].len);
-
+//	printk("used elem id %08x\n",disk.used->ring[disk.used->idx - 1].id);
+//	printk("used_elem %08x\n",disk.used->ring[disk.used->idx - 1].len);
 	free_chain(idx);
 }
 
-
-
+void disk_rw(_u64 sector,int write,void* adhr,int nsecs) {
+	//printk("ccc::%s::\n",(char*)adhr);
+	printk("queue address is %08x\n",disk);
+	for (int i = 0; i < nsecs; ++i) {
+		disk_rw_sector(sector + i ,write,adhr + SECTOR_SIZE * i);
+	}
+}
 
 
 

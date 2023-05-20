@@ -5,6 +5,18 @@
 #include<trap.h>
 
 
+void ecall_write_disk(uint64_t sector,void*buf,int nsecs) {
+	uint32_t lowsector = (uint32_t)sector;
+	uint32_t highsector = (uint32_t)(sector >> 32);
+	mecall(ECALL_write_disk,lowsector,highsector,buf,nsecs);
+}
+
+void ecall_read_disk(uint64_t sector,void* buf,int nsecs) {
+	uint32_t lowsector = (uint32_t)sector;
+	uint32_t highsector = (uint32_t)(sector >> 32);
+	mecall(ECALL_read_disk,lowsector,highsector,buf,nsecs);	
+}
+
 int ecall_getchar(void) {
 	return mecall(ECALL_getchar);
 }

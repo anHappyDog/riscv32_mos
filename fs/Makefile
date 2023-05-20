@@ -10,9 +10,27 @@ USERAPPS	:= $(addprefix $(user_dir)/,$(USERAPPS))
 #FSLIB		:= fs.o 
 FSIMGFILES	:= rootfs/motd rootfs/newmotd $(USERAPPS) $(fs-files)
 
-#.PRECIOUS: %.b %.b.c
+.PRECIOUS: %.b %.b.c
 
-#$.x: %.b.c
+%.x: %.b.c
+	$(CC) $(INCLUDES) $(CFLAGS) -c -o $@ $<
+%.b.c: %.b
+	$(tools_dir)/bintoc -f $< -o $@ -p fs
+%.b: %.o $(USERLIB) $(FSLIB)
+	$(LD) -o $@ $(LDFLAGS) -T $(user_dir)/user.lds $^
+%.o: %.c
+	$(CC) $(CFLAGS) $(INCLUDES) -c -o $@ $<
+%.o: %.S
+	$(CC) $(CFLAGS) $(INCLUDES) -c -o $@ $<
+
+%.o: $(user_dir)/lib.h
+
+.PHONY: all clean image
+all: t1.x
+
+clean:
+	rm -rf *~ *.o *.b.c *.b *.x
+
 
 image: $(tools_dir)/fsformat
 	dd if=/dev/zero of=../target/fs.img bs=4096 count=1024 2>/dev/null

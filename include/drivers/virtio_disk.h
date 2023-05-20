@@ -3,6 +3,8 @@
 #include <drivers/virtio_types.h>
 #include <drivers/virtio.h>
 
+#define SECTOR_SIZE 512
+
 #define MAGIC_VALUE 0x74726976
 #define VERSION 0x2
 #define DEVICEID 0x2
@@ -102,8 +104,8 @@ struct virtqueue {
 
 };
 
+void disk_rw_sector(_u64 sector,int write,void*buf); 
 void disk_init(void);
-void disk_rw(_u64 sector,int wirte,void*buf);
-
+void disk_rw(_u64 sector,int write,void* adhr,int nsecs);
 
 #endif

@@ -18,26 +18,21 @@ void riscv32_init() {
 	riscv32_detect_memory();
 	page_init();
 	pgdir_init();
+	disk_init();
 	env_init();
 	
-	disk_init();
-	char buf[550];
-	for (int i = 0; i < 100; ++i) {
+	ENV_CREATE(fs_t1);
+/*	char buf[550];
+	for (int i = 0; i < 512;++i) {
 		buf[i] = 'c';
 	}
-	//	buf[0] = 'c';
-	buf[100] = 0;
-	disk_rw(1,1,buf);
-	//disk_rw(1,1,buf);
-	//disk_rw(1,1,buf);
-	//disk_rw(1,1,buf);
-	memset(buf,0,550);
-	//printk("before::%s\n",buf);
-	disk_rw(1,0,buf);
-	printk(":::\n%s\n:::\n",buf);
-//	SBI_TIMER(200000 + RD_TIME());
-	//while(1);
-	
+	e_write_disk(0,0,buf,1);
+	memset(buf,0,sizeof(buf));
+	e_read_disk(0,0,buf,1);
+	printk(":::\n%s\n:::\n",buf);*/
+
+	SBI_TIMER(200000 + RD_TIME());
+	while(1);
 	SBI_SHUTDOWN();
 }
 

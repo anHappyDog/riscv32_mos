@@ -6,8 +6,17 @@
 #include <ecall.h>
 #include <asm/embdasm.h>
 #include <drivers/console.h>
-
+#include <drivers/virtio_disk.h>
 extern struct Env* curenv;
+
+void e_write_disk(uint32_t lowsector,uint32_t highsector,void* adhr,int nsecs) {
+	uint64_t sector = ((uint64_t)highsector << 32) | lowsector;
+	disk_rw(sector,1,adhr,nsecs);
+}
+void e_read_disk(uint32_t lowsector,uint32_t highsector, void* adhr,int nsecs) {
+	uint64_t sector = ((uint64_t)highsector << 32) | lowsector;
+	disk_rw(sector,0,adhr,nsecs);
+}
 
 void e_putchar(int c) {
 	printcharc((char)c);
@@ -258,6 +267,8 @@ void* ecall_table[MAX_ENO] = {
 	[ECALL_get_pgdir] = e_get_pgdir,
 	[ECALL_write_dev] = e_write_dev,
 	[ECALL_read_dev] = e_read_dev,
+	[ECALL_read_disk] = e_read_disk,
+	[ECALL_write_disk] = e_write_disk,
 	
 };
 
