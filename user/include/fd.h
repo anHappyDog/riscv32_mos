@@ -3,7 +3,7 @@
 
 #include <fs.h>
 
-#define debug 0
+//#define debug 0
 
 #define MAXFD 32
 
@@ -58,6 +58,6 @@ int num2fd(int fd);
 
 extern struct Dev devcons;
 extern struct Dev devfile;
-extern struct Dev devpipe;
+//extern struct Dev devpipe;
 
 #endif

@@ -131,7 +131,7 @@ void env_init(void) {
 	map_segment(base_pgdir,0,(u_long)disk->avail,(u_long)disk->avail,BY2PG,PTE_G | PTE_R | PTE_W | PTE_LIBRARY);
 	map_segment(base_pgdir,0,(u_long)disk->used,(u_long)disk->used,BY2PG,PTE_G | PTE_R | PTE_W | PTE_LIBRARY);
 	
-	pgdir_map(base_pgdir,0,DISK_ADDRESS,DISK_ADDRESS,PTE_R | PTE_W | PTE_G | PTE_LIBRARY);
+	pgdir_map(base_pgdir,0,DISK_ADDRESS - KERNSTART ,DISK_ADDRESS,PTE_R | PTE_W | PTE_G | PTE_LIBRARY);
 	printk("envs's address is 0x%08x\n",envs);
 	printk("env_init : envs int finished !\n");
 	printk("---------------------------------------------------------------\n");

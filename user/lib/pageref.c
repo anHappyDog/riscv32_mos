@@ -1,6 +1,5 @@
 #include <lib.h>
 
 int pageref(void* v) {
-	u_int pte;
-
+	return ecall_get_pgref(v);
 }

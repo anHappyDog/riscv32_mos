@@ -21,7 +21,7 @@ void* diskaddr(u_int blockno) {
 
 int va_is_mapped(void* va) {
 	//	return () ;
-	return IS_VAL(fs_pgdir,va);
+	return ecall_check_address(va,0,0) == 0 ? 1 : 0;
 }
 
 void* block_is_mapped(u_int blockno) {
@@ -54,7 +54,7 @@ int read_block(u_int blockno, void** blk, u_int *isnew) {
 		if (isnew) {
 			*isnew = 1;
 		}
-		ecall_mem_alloc(0,va,PTE_D);
+		ecall_mem_alloc(0,va,PTE_D | PTE_R | PTE_W | PTE_U | PTE_G | PTE_LIBRARY);
 		ecall_read_disk(blockno*SECT2BLK,0,va,SECT2BLK);
 	}
 	if (blk) {

@@ -6,6 +6,12 @@ USERLIB 				:=  entry.o \
 							fork.o		\
 							ecall_lib.o	\
 							ipc.o		\
+							pageref.o	\
+							console.o	\
+							fsipc.o		\
+							fd.o		\
+							file.o		\
+							fprintf.o	
 
 INITAPPS := fktest.x ppa.x test1.x
 USERLIB :=	$(addprefix lib/, $(USERLIB)) $(wildcard ../lib/*.o)

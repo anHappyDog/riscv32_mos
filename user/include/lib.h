@@ -53,7 +53,7 @@ int ecall_mem_alloc(u_int envid, void* va, u_int perm);
 int ecall_mem_map(u_int srcid, void* srcva,u_int dstid, void* dstva, u_int perm);
 int ecall_mem_unmap(u_int envid, void* va);
 int ecall_get_pgdir(Pde** pde);
-
+int ecall_get_pgref(void* v); 
 __attribute__((always_inline)) inline static int ecall_exofork(void) {
 	return mecall(ECALL_exofork,0,0,0,0,0);
 }
@@ -68,16 +68,57 @@ int ecall_write_dev(void*,u_int,u_int);
 int ecall_read_dev(void*,u_int,u_int);
 void ecall_write_disk(uint32_t lowsec,uint32_t highsec,void*buf,int nsec); 
 void ecall_read_disk(uint32_t lowsec,uint32_t highsec,void*buf,int nsec); 
+int ecall_check_address(void* v,Pde** pde, Pte** pte);
 
+//ipc
 void ipc_send(u_int whom,u_int val, const void* srcva, u_int perm);
 u_int ipc_recv(u_int* whom, void* dstva, u_int* perm);
 
+//wait.c
 void wait(u_int envid);
 
-// not finished!!!!
-//
-//
-//
+//console.c
+int opencons(void);
+int iscons(int fdnum);
+
+//pipe.c
+// int pipe(int pfd[2]);
+// pipe_is_closed(int fdnum);
+
+//pageref.c
+int pageref(void*v);
+
+//fprintf.c
+//int fprintf(int fd, const char* fmt,...);
+//int pritnf(const char *fmt, ...);
+
+//fsipc.c
+int fsipc_open(const char*, u_int, struct Fd*);
+int fsipc_map(u_int ,u_int ,void*);
+int fsipc_set_size(u_int ,u_int);
+int fsipc_close(u_int);
+int fsipc_dirty(u_int,u_int);
+int fsipc_remove(const char* );
+int fsipc_sync(void);
+int fsipc_incref(u_int);
+
+//fd.c
+int close(int fd);
+int read(int fd, void* buf, u_int nbytes);
+int write(int fd,const void* buf, u_int nbytes);
+int seek(int fd, u_int offset);
+void close_all(void);
+int readn(int fd, void* buf, u_int nbytes);
+int dup(int oldfd, int newfd);
+int fstat(int fdnum, struct Stat* stat);
+int stat(const char* path, struct Stat*);
+
+//file.c
+int open(const char* path, int mode);
+int read_map(int fd, u_int offset, void** blk);
+int remove(const char* path);
+int ftruncate(int fd,u_int size);
+int sync(void);
 
 #define user_assert(x)								\
 	do {											\

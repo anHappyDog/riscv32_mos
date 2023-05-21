@@ -10,6 +10,33 @@
 
 extern struct Env* curenv;
 
+int e_check_address(void* v,Pde**pde,Pte** pte) {
+	if (!(cur_pgdir[PDX(v)] & PTE_V)) {
+		return -1;
+	}
+	if (pde) {
+		*pte = &cur_pgdir[PDX(v)];
+	}
+	Pte* t = (Pte*)((cur_pgdir[PDX(v)] >> 10) << 12) + PTX(v);
+	if (!(*t & PTE_V)) {
+		return -1;
+	}
+	if (pte) {
+		*pte = t;
+	}
+	return 0;
+}
+
+int e_get_pgref(void*v)
+{	
+	Pte* pte = NULL;
+	if (e_check_address(v,0,&pte) != 0) {
+		return 0;
+	}
+	return pages[page2ppn(addr2page((*pte >> 10) << 12))].pp_ref;
+
+}
+
 void e_read_disk(uint32_t lowsec,uint32_t highsec,void*buf,int nsec) {
 	uint64_t sector = lowsec | ((uint64_t)highsec << 32);
 	disk_rw(sector,0,buf,nsec);
@@ -272,6 +299,8 @@ void* ecall_table[MAX_ENO] = {
 	[ECALL_read_dev] = e_read_dev,
 	[ECALL_read_disk] = e_read_disk,
 	[ECALL_write_disk] = e_write_disk,	
+	[ECALL_check_address] = e_check_address,
+	[ECALL_get_pgref] = e_get_pgref,
 };
 
 

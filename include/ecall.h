@@ -26,6 +26,8 @@ enum {
 	ECALL_read_dev,
 	ECALL_read_disk,
 	ECALL_write_disk,
+	ECALL_check_address,
+	ECALL_get_pgref,
 	MAX_ENO,	
 
 };
