@@ -13,5 +13,5 @@ USERLIB 				:=  entry.o \
 							file.o		\
 							fprintf.o	
 
-INITAPPS := fktest.x ppa.x test1.x
+INITAPPS := fktest.x ppa.x test1.x test2.x
 USERLIB :=	$(addprefix lib/, $(USERLIB)) $(wildcard ../lib/*.o)

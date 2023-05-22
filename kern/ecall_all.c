@@ -1,4 +1,3 @@
-#include <sbi.h>
 #include <env.h>
 #include <mmu.h>
 #include <pmap.h>
@@ -111,7 +110,7 @@ int e_mem_map(u_int srcid, u_int srcva, u_int dstid, u_int dstva,u_int perm) {
 	if (is_illegal_va(srcva) || is_illegal_va(dstva)) {
 		return -E_INVAL;
 	}
-	if (envid2env(srcid,&srcenv,1) != 0 || envid2env(dstid,&dstenv,1) != 0) {
+	if (envid2env(srcid,&srcenv,1) != 0 || envid2env(dstid,&dstenv,0) != 0) {
 		return -E_BAD_ENV;
 	}
 	Pte* t;

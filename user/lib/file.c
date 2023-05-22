@@ -28,7 +28,7 @@ int open(const char* path, int mode) {
 	va = fd2data(fd);
 	ffd = (struct Filefd*)fd;
 	size = ffd->f_file.f_size;
-	fileid = ffd->f_file.f_size;
+	fileid = ffd->f_fileid;
 	for (int i = 0; i < size; i += BY2PG) {
 		try(fsipc_map(fileid,i,va + i));
 	}

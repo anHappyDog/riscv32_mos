@@ -3,7 +3,7 @@
 static char* file1 = "/newmotd";
 
 int main() {
-	char str[100];		
+	char str[100] = "1233333333333333333333333333333333333333333333333333";		
 	char buf[1024];
 	int r = open(file1,O_RDWR);
 	if (r < 0) {
@@ -12,6 +12,7 @@ int main() {
 	int len = strlen(str);
 	fprintf(r,str,len);
 	close(r);
+	
 	r = open(file1,O_RDWR);
 	if (r < 0) {
 		user_panic("sad\n");

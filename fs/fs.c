@@ -223,12 +223,14 @@ int file_block_walk(struct File* f,u_int filebno, uint32_t **ppdiskbno, u_int al
 			}
 			if ((r = alloc_block()) < 0) {
 				return r;
-			}	
+			}
+			f->f_indirect = r;
 		}
-		f->f_indirect = r;
-	}
-	if ((r = read_block(f->f_indirect,(void**)&blk,0)) < 0) {
-		return r;
+		if ((r = read_block(f->f_indirect,(void**)&blk,0)) < 0) {
+			return r;
+		
+		}
+	   ptr = blk + filebno;	
 	} else {
 		return -E_INVAL;
 	}
@@ -242,6 +244,7 @@ int file_map_block(struct File* f, u_int filebno, u_int* diskbno, u_int alloc) {
 	if ((r = file_block_walk(f,filebno,&ptr,alloc)) < 0) {
 		return r;
 	}
+	//debugf("ptr is %08x\n, *ptr is %d\n",ptr,*ptr);
 	if (*ptr == 0) {
 		if (alloc == 0) {
 			return -E_NOT_FOUND;
@@ -375,6 +378,8 @@ int walk_path(char* path,struct File** pdir,struct File** pfile,char*lastelem) {
 		if (dir->f_type != FTYPE_DIR) {
 			return -E_NOT_FOUND;
 		}
+		debugf("super->s_root is %s\n",super->s_root.f_name);
+		debugf("dir is %s: name is %s\n",dir->f_name,name);
 		if ((r = dir_lookup(dir,name,&file)) < 0) {
 			if (r == -E_NOT_FOUND && *path == 0) {
 				if (pdir) {
@@ -464,6 +469,7 @@ void file_flush(struct File* f) {
 		if ((r = file_map_block(f,bno,&diskno,0)) < 0) {
 			continue;
 		}
+
 		if (block_is_dirty(diskno)) {
 			write_block(diskno);
 		}

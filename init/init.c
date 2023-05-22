@@ -26,6 +26,7 @@ void riscv32_init() {
 	printk(":::%s:::\n",buf);
 	disk_rw(0,1,buf,1);
 */
+	ENV_CREATE(user_test2);
 	ENV_CREATE(fs_serv);
 	ENV_CREATE(user_test1);
 	SBI_TIMER(200000 + RD_TIME());

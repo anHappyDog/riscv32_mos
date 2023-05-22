@@ -32,15 +32,18 @@ void serve_init(void) {
 
 
 
-int open_alloc(struct Open** o) {
+int open_alloc(u_int envid,struct Open** o) {
 	int i,r;
 	for (i = 0; i < MAXOPEN; ++i) {
 		switch(pageref(opentab[i].o_ff)) {
 			case 0:
-				if ((r = ecall_mem_alloc(0,opentab[i].o_ff,PTE_D | PTE_LIBRARY)) < 0) {
+				if ((r = ecall_mem_alloc(0,opentab[i].o_ff,PTE_G | PTE_R | PTE_W | PTE_U | PTE_D | PTE_LIBRARY)) < 0) {
 					return r;
 				}
-			case 1:
+			default:
+				if ((r = ecall_mem_map(0,opentab[i].o_ff,envid,opentab[i].o_ff,PTE_G | PTE_R | PTE_W | PTE_U | PTE_D | PTE_LIBRARY) < 0)) {
+					return r;		
+				}
 				opentab[i].o_fileid += MAXOPEN;
 				*o = &opentab[i];
 				memset((void*)opentab[i].o_ff,0,BY2PG);
@@ -66,9 +69,10 @@ void serve_open(u_int envid, struct Fsreq_open* rq) {
 	struct Filefd* ff;
 	int r;
 	struct Open *o;
-	if ((r = open_alloc(&o)) < 0) {
+	if ((r = open_alloc(envid,&o)) < 0) {
 		ipc_send(envid,r,0,0);
 	}
+
 	if ((r = file_open(rq->req_path,&f)) < 0) {
 		ipc_send(envid,r,0,0);
 		return;
@@ -79,8 +83,8 @@ void serve_open(u_int envid, struct Fsreq_open* rq) {
 	ff->f_fileid = o->o_fileid;
 	o->o_mode = rq->req_omode;
 	ff->f_fd.fd_omode = o->o_mode;
-	//ff->f_fd.fd_dev_id = devfile.dev_id;
-	ipc_send(envid,0,o->o_ff,PTE_D | PTE_LIBRARY);
+	ff->f_fd.fd_dev_id = devfile.dev_id;
+	ipc_send(envid,0,o->o_ff,PTE_R | PTE_W | PTE_U | PTE_G | PTE_D | PTE_LIBRARY);
 }
 
 void serve_map(u_int envid, struct Fsreq_map* rq) {
@@ -97,7 +101,7 @@ void serve_map(u_int envid, struct Fsreq_map* rq) {
 		ipc_send(envid,r,0,0);
 		return;
 	}
-	ipc_send(envid,0,blk,PTE_D | PTE_LIBRARY);
+	ipc_send(envid,0,blk,PTE_R | PTE_W | PTE_U | PTE_G | PTE_D | PTE_LIBRARY);
 }
 
 void serve_set_size(u_int envid, struct Fsreq_set_size* rq) {
@@ -114,6 +118,7 @@ void serve_set_size(u_int envid, struct Fsreq_set_size* rq) {
 	ipc_send(envid,0,0,0);
 
 }
+
 
 void serve_close(u_int envid,struct Fsreq_close* rq) {
 	struct Open *popen;
@@ -165,28 +170,28 @@ void serve(void) {
 		switch (req) {
 			case FSREQ_OPEN:
 				serve_open(whom,(struct Fsreq_open*)REQVA);
-			break;
+				break;
 			case FSREQ_MAP:
 				serve_map(whom,(struct Fsreq_map*)REQVA);
-			break;
+				break;
 			case FSREQ_SET_SIZE:
 				serve_set_size(whom,(struct Fsreq_set_size*)REQVA);
-			break;
+				break;
 			case FSREQ_CLOSE:
 				serve_close(whom,(struct Fsreq_close*)REQVA);
-			break;
+				break;
 			case FSREQ_DIRTY:
 				serve_dirty(whom,(struct Fsreq_dirty*)REQVA);
-			break;
+				break;
 			case FSREQ_REMOVE:
 				serve_remove(whom,(struct Fsreq_remove*)REQVA);
-			break;
+				break;
 			case FSREQ_SYNC:
 				serve_sync(whom);
-			break;
+				break;
 			default:
 				debugf("Invalid request code %d from %08x\n",whom,req);
-			break;	
+				break;	
 		}
 	}
 	ecall_mem_unmap(0,(void*)REQVA);
