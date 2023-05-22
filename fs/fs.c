@@ -54,7 +54,7 @@ int read_block(u_int blockno, void** blk, u_int *isnew) {
 		if (isnew) {
 			*isnew = 1;
 		}
-		ecall_mem_alloc(0,va,PTE_D | PTE_R | PTE_W | PTE_U | PTE_G | PTE_LIBRARY);
+		ecall_mem_alloc(0,va,PTE_D | PTE_R | PTE_W | PTE_U | PTE_LIBRARY);
 		ecall_read_disk(blockno*SECT2BLK,0,va,SECT2BLK);
 	}
 	if (blk) {
@@ -67,7 +67,7 @@ int map_block(u_int blockno) {
 	if (block_is_mapped(blockno) != NULL) {
 		return 0;
 	}
-	return ecall_mem_alloc(ecall_getenvid(),(void*)diskaddr(blockno),PTE_D);
+	return ecall_mem_alloc(ecall_getenvid(),(void*)diskaddr(blockno),PTE_D | PTE_R | PTE_W | PTE_U);
 }
 
 int block_is_dirty(u_int blockno) {
@@ -80,6 +80,11 @@ void write_block(u_int blockno) {
 		user_panic("write unmapped block %08x\n",blockno);
 	}
 	void* va = diskaddr(blockno);
+//	debugf("block * SECT2BLK is %d\n",blockno * SECT2BLK);
+//	debugf("write back va is ;;%s;;\n",(char*)va);
+//	char buf[4099];
+//	ecall_read_disk(blockno * SECT2BLK,0,buf,SECT2BLK);
+//	debugf("before write va is ;;;%s;;;\n",buf);
 	ecall_write_disk(blockno * SECT2BLK,0,va,SECT2BLK);
 }
 
@@ -102,7 +107,7 @@ int dirty_block(u_int blockno) {
 	if (va_is_dirty(va)) {
 		return 0;
 	}
-	return ecall_mem_map(0,va,0,va,PTE_D | PTE_DIRTY);
+ 	return ecall_mem_map(0,va,0,va,PTE_D | PTE_DIRTY | PTE_R | PTE_W | PTE_U);
 }
 
 int block_is_free(u_int blockno) {
@@ -378,8 +383,8 @@ int walk_path(char* path,struct File** pdir,struct File** pfile,char*lastelem) {
 		if (dir->f_type != FTYPE_DIR) {
 			return -E_NOT_FOUND;
 		}
-		debugf("super->s_root is %s\n",super->s_root.f_name);
-		debugf("dir is %s: name is %s\n",dir->f_name,name);
+		//debugf("super->s_root is %s\n",super->s_root.f_name);
+		//debugf("dir is %s: name is %s\n",dir->f_name,name);
 		if ((r = dir_lookup(dir,name,&file)) < 0) {
 			if (r == -E_NOT_FOUND && *path == 0) {
 				if (pdir) {

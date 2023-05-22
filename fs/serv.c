@@ -40,10 +40,11 @@ int open_alloc(u_int envid,struct Open** o) {
 				if ((r = ecall_mem_alloc(0,opentab[i].o_ff,PTE_G | PTE_R | PTE_W | PTE_U | PTE_D | PTE_LIBRARY)) < 0) {
 					return r;
 				}
-			default:
+			/*default:
 				if ((r = ecall_mem_map(0,opentab[i].o_ff,envid,opentab[i].o_ff,PTE_G | PTE_R | PTE_W | PTE_U | PTE_D | PTE_LIBRARY) < 0)) {
 					return r;		
-				}
+				}*/
+			case 1:
 				opentab[i].o_fileid += MAXOPEN;
 				*o = &opentab[i];
 				memset((void*)opentab[i].o_ff,0,BY2PG);

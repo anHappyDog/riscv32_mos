@@ -12,7 +12,7 @@ int main() {
 	int len = strlen(str);
 	fprintf(r,str,len);
 	close(r);
-	
+		
 	r = open(file1,O_RDWR);
 	if (r < 0) {
 		user_panic("sad\n");
@@ -22,6 +22,8 @@ int main() {
 		user_panic("sda1\n");
 	}
 	buf[len] = 0;
+//	printf(";;;%s;;;\n",buf);
+	debugf(":;;;;%s;;;\n",buf);
 	if (strcmp(str,buf) != 0) {
 		user_panic("read failed!\n");
 	}
