@@ -11,7 +11,17 @@ USERLIB 				:=  entry.o \
 							fsipc.o		\
 							fd.o		\
 							file.o		\
-							fprintf.o	
+							fprintf.o	\
+							wait.o		\
+							spawn.o		\
+							pipe.o		
+USERAPPS				:=  num.b		\
+							echo.b		\
+							halt.b		\
+							ls.b		\
+							sh.b		\
+							cat.b		\
+							init.b
 
-INITAPPS := fktest.x ppa.x test1.x test2.x testipc1.x testipc2.x
+INITAPPS := icode.x 
 USERLIB :=	$(addprefix lib/, $(USERLIB)) $(wildcard ../lib/*.o)

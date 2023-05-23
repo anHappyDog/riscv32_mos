@@ -4,7 +4,7 @@
 #include <mmu.h>
 
 
-static struct Dev* devtab[] = {&devcons,&devfile,0,0};
+static struct Dev* devtab[] = {&devcons,&devfile,&devpipe,0};
 
 int dev_lookup(int dev_id, struct Dev** dev) {
 	for (int i = 0; devtab[i]; ++i) {
