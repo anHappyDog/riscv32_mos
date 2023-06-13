@@ -12,7 +12,7 @@ int ecall_get_pgref(void* v) {
 	return mecall(ECALL_get_pgref,v);
 }
 
-int ecall_check_address(void*v,Pde** pde, Pte** pte) {
+int ecall_check_address(void*v,Pde* pde, Pte* pte) {
 	return mecall(ECALL_check_address,v,pde,pte);
 }
 

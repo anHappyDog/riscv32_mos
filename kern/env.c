@@ -218,7 +218,7 @@ struct Env* env_create(const void* binary, size_t size, int priority) {
 	e->env_pri = priority;
 	e->env_status = ENV_RUNNABLE;
 	load_icode(e,binary,size);
-	reflect_pgdir(e);	
+	//reflect_pgdir(e);	
 	TAILQ_INSERT_HEAD(&env_sched_list,e,env_sched_link);	
 	return e;
 }

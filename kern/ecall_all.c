@@ -9,15 +9,15 @@
 
 extern struct Env* curenv;
 
-int e_check_address(void* v,Pde**pde,Pte** pte) {
+int e_check_address(void* v,Pde*pde,Pte* pte) {
 	if (!(cur_pgdir[PDX(v)] & PTE_V)) {
 		return -1;
 	}
 	if (pde) {
-		*pte = &cur_pgdir[PDX(v)];
+		*pde = cur_pgdir[PDX(v)];
 	}
-	Pte* t = (Pte*)((cur_pgdir[PDX(v)] >> 10) << 12) + PTX(v);
-	if (!(*t & PTE_V)) {
+	Pte t = ((Pte*)((cur_pgdir[PDX(v)] >> 10) << 12))[PTX(v)];
+	if (!(t & PTE_V)) {
 		return -1;
 	}
 	if (pte) {
@@ -28,11 +28,11 @@ int e_check_address(void* v,Pde**pde,Pte** pte) {
 
 int e_get_pgref(void*v)
 {	
-	Pte* pte = NULL;
+	Pte pte;
 	if (e_check_address(v,0,&pte) != 0) {
 		return 0;
 	}
-	return pages[page2ppn(addr2page((*pte >> 10) << 12))].pp_ref;
+	return pages[page2ppn(addr2page((pte >> 10) << 12))].pp_ref;
 
 }
 
@@ -141,7 +141,7 @@ int e_exofork(void) {
 	e->env_tf.regs[10] = 0;
 	e->env_status = ENV_NOT_RUNNABLE;
 	e->env_pri = curenv->env_pri;
-	reflect_pgdir(e);
+	//reflect_pgdir(e);
 	//Pte* pt;
 	//u_int addr,perm;
 	/*for (int i = VPN(USTACKTOP) - 1;i >= VPN(USTACKTOP) - 8; --i) {

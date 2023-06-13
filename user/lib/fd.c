@@ -23,7 +23,7 @@ int fd_alloc(struct Fd** fd) {
 	u_int fdno;
 	for (fdno = 0; fdno < MAXFD - 1; ++fdno) {
 		va = INDEX2FD(fdno);
-		if (ecall_check_address((void*)(va / PDMAP),0,0) != 0) {
+		if (ecall_check_address((void*)va,0,0) != 0) {
 			*fd = (struct Fd*)va;
 			return 0;
 		}
@@ -41,7 +41,7 @@ int fd_lookup(int fdnum,struct Fd** fd) {
 		return -E_INVAL;
 	}
 	va = INDEX2FD(fdnum);
-	if (ecall_check_address((void*)va,0,0) != 0) {
+	if (ecall_check_address((void*)va,0,0) == 0) {
 		*fd = (struct Fd*)va;
 		return 0;
 	}
@@ -81,8 +81,8 @@ void close_all(void) {
 int dup(int oldfdnum,int newfdnum) {
 	int i,r;
 	void* ova,*nva;
-	Pte* pte1;
-	Pde* pde1;
+	Pte pte1;
+	Pde pde1;
 	struct Fd* oldfd,*newfd;
 	if ((r = fd_lookup(oldfdnum,&oldfd)) < 0) {
 		return r;
@@ -91,24 +91,25 @@ int dup(int oldfdnum,int newfdnum) {
 	newfd = (struct Fd*)INDEX2FD(newfdnum);
 	ova = fd2data(oldfd);
 	nva = fd2data(newfd);
-	ecall_check_address(oldfd,&pde1,&pte1);
+	ecall_check_address(ova,&pde1,&pte1);
 	//NOTICE
-	if ((r = ecall_mem_map(0,oldfd,0,newfd,*pte1 & (PTE_D | PTE_LIBRARY | PTE_R | PTE_W))) < 0) {
-		goto err;
-	}
-	ecall_check_address(ova,&pde1,0);
-	if (*pde1) {
+	if (pde1) {
 		for (i = 0; i < PDMAP; i += BY2PG) {
-			ecall_check_address(ova + i,&pde1,&pte1); 
-			if (*pte1 & PTE_V) {
-				if ((r = ecall_mem_map(0,(void*)(ova + i),0,(void*)(nva + i),
-								((*pte1 & (PTE_D | PTE_LIBRARY)) | PTE_R | PTE_R))) < 0) {
+			ecall_check_address((ova + i),&pde1,&pte1); 
+			if (pte1 & PTE_V) {
+				if ((r = ecall_mem_map(0,(void*)(ova + i),0,(void*)(nva + i),((pte1 & (PTE_D | PTE_LIBRARY)) | PTE_R | PTE_W | PTE_U))) < 0) {
 					goto err;	
 				}
 			}
 		}
-	
+
 	}
+
+	ecall_check_address(oldfd,0,&pte1);
+	if ((r = ecall_mem_map(0,oldfd,0,newfd,((pte1 & (PTE_D | PTE_LIBRARY)) | PTE_R | PTE_W | PTE_U ))) < 0) {
+		goto err;
+	}
+
 	return newfdnum;
 err:			
 	ecall_mem_unmap(0,newfd);

@@ -8,7 +8,7 @@ u_char fsipcbuf[BY2PG] __attribute__((aligned(BY2PG)));
 
 static int fsipc(u_int type, void* fsreq, void* dstva, u_int *perm) {
 	u_int whom;
-	ipc_send(envs[1].env_id,type,fsreq,PTE_D | PTE_R | PTE_W | PTE_U | PTE_LIBRARY);
+	ipc_send(envs[1].env_id,type,fsreq,PTE_D | PTE_R | PTE_W | PTE_U);
 	return ipc_recv(&whom,dstva,perm);
 }
 

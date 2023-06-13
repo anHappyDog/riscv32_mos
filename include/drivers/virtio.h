@@ -28,7 +28,7 @@
 
 #define GET(bs,addr) *(_u32*)(bs + addr)
 
-#define QUEUE_SIZE 8
+#define QUEUE_SIZE 32
 
 
 //for virtq_desc flags;

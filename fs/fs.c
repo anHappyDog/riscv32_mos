@@ -54,7 +54,7 @@ int read_block(u_int blockno, void** blk, u_int *isnew) {
 		if (isnew) {
 			*isnew = 1;
 		}
-		ecall_mem_alloc(0,va,PTE_D | PTE_R | PTE_W | PTE_U | PTE_LIBRARY);
+		ecall_mem_alloc(0,va,PTE_D | PTE_R | PTE_W | PTE_U);
 		ecall_read_disk(blockno*SECT2BLK,0,va,SECT2BLK);
 	}
 	if (blk) {
@@ -114,7 +114,7 @@ int block_is_free(u_int blockno) {
 	if (super == 0 || blockno >= super->s_nblocks) {
 		return 0;
 	}
-	if (bitmap[blockno / 32 ] & (1 << (blockno % 0x1f))) {
+	if (bitmap[blockno / 32 ] & (1 << (blockno % 32))) {
 		return 1;
 	}
 	return 0;
@@ -124,14 +124,14 @@ void free_block(u_int blockno) {
 	if (blockno == 0 || blockno >= super->s_nblocks) {
 		return;
 	}
-	bitmap[blockno / 32] |= (1 << (blockno & 0x1f));
+	bitmap[blockno / 32] |= (1 << (blockno % 32));
 }
 
 int alloc_block_num(void) {
 	int blockno;
 	for (blockno = 3; blockno < super->s_nblocks; ++blockno) {
 		if (block_is_free(blockno)) {
-			bitmap[blockno / 32] &= ~(1 << (blockno & 0x1f));
+			bitmap[blockno / 32] &= ~(1 << (blockno % 32));
 			write_block(blockno / BIT2BLK + 2);
 			return blockno;
 		}

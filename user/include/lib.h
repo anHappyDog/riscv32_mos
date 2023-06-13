@@ -37,7 +37,7 @@ void _user_halt(const char*,int, const char*, ...) __attribute__ ((noreturn));
 
 
 int spawn(char* prog, char** argv);
-int spawnl(char* prot, char* args, ...);
+int spawnl(char* prot,...);
 int fork();
 
 
@@ -69,7 +69,7 @@ int ecall_write_dev(void*,u_int,u_int);
 int ecall_read_dev(void*,u_int,u_int);
 void ecall_write_disk(uint32_t lowsec,uint32_t highsec,void*buf,int nsec); 
 void ecall_read_disk(uint32_t lowsec,uint32_t highsec,void*buf,int nsec); 
-int ecall_check_address(void* v,Pde** pde, Pte** pte);
+int ecall_check_address(void* v,Pde* pde, Pte* pte);
 
 //ipc
 void ipc_send(u_int whom,u_int val, const void* srcva, u_int perm);

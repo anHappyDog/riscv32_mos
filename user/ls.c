@@ -2,20 +2,24 @@
 
 int flag[256];
 
-void lsdir(char*,char*);
-void ls1(char*,u_int,u_int ,char*);
-
-void ls(char* path,char* prefix) {
-	int r;
-	struct Stat st;
-	if ((r = stat(path,&st)) < 0) {
-		user_panic("stat %s: %d",path,r);
+void ls1(char* prefix, u_int isdir, u_int size, char* name) {
+	char* sep;
+	if (flag['l']) {
+		printf("%lld %c",size,isdir?'d':'-');
 	}
-	if (st.st_isdir && !flag['d']) {
-		lsdir(path,prefix);
-	} else {
-		ls1(0,st.st_isdir,st.st_size,path);
+	if (prefix) {
+		if (prefix[0] && prefix[strlen(prefix) - 1] != '/') {
+			sep = "/";
+		} else {
+			sep = "";
+		}
+		printf("%s%s",prefix,sep);
 	}
+	printf("%s",name);
+	if (flag['F'] && isdir) {
+		printf("/");
+	}
+	printf(" ");
 }
 
 void lsdir(char* path,char* prefix) {
@@ -37,24 +41,18 @@ void lsdir(char* path,char* prefix) {
 	}
 }
 
-void ls1(char* prefix, u_int isdir, u_int size, char* name) {
-	char* sep;
-	if (flag['l']) {
-		printf("%lld %c",size,isdir?'d':'-');
+void ls(char* path,char* prefix) {
+/*	int r;
+	struct Stat st;
+	if ((r = stat(path,&st)) < 0) {
+		user_panic("stat %s: %d",path,r);
 	}
-	if (prefix) {
-		if (prefix[0] && prefix[strlen(prefix) - 1] != '/') {
-			sep = "/";
-		} else {
-			sep = "";
-		}
-		printf("%s%s",prefix,sep);
-	}
-	printf("%s",name);
-	if (flag['F'] && isdir) {
-		printf("/");
-	}
-	printf("");
+	if (st.st_isdir && !flag['d']) {
+		lsdir(path,prefix);
+	} else {
+		ls1(0,st.st_isdir,st.st_size,path);
+	}*/
+	lsdir("/","");
 }
 
 void usage(void) {

@@ -94,6 +94,7 @@ int spawn(char* prog, char** argv) {
 	}
 	u_long entrypoint = ehdr->e_entry;
 	u_int child = ecall_exofork();
+	debugf("spawn child is %08x\n",child);
 	if (child < 0) {
 		r = -E_NOT_EXEC;
 		goto err;
@@ -160,6 +161,17 @@ err:
 	return r;
 }
 
-int spawnl(char* prog,char*args,...) {
-	return spawn(prog,&args);
+int spawnl(char* prog,...) {
+	int cnt = 0;
+	char* args[128];
+	va_list arg;
+	va_start(arg,prog);
+	while (1) {
+		args[cnt] = va_arg(arg,char*);
+		if (!args[cnt]) {
+			break;
+		}
+		++cnt;
+	}
+	return spawn(prog,args);
 }

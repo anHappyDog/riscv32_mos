@@ -117,7 +117,6 @@ void runcmd(char* s) {
 	}
 	argv[argc] = 0;
 	int child = spawn(argv[0],argv);
-	close_all();
 	if (child >= 0) {
 		wait(child);
 	} else {
@@ -138,20 +137,20 @@ void readline(char* buf, u_int n) {
 			}
 			exit();
 		}
-	if (buf[i] == '\b' || buf[i] == 0x7f) {
-		if (i > 0) {
-			i -= 2;
-		} else {
-			i = -1;
+		if (buf[i] == '\b' || buf[i] == 0x7f) {
+			if (i > 0) {
+				i -= 2;
+			} else {
+				i = -1;
+			}
+			if (buf[i] != '\b') {
+				printf("\b");
+			}
 		}
-		if (buf[i] != '\b') {
-			printf("\b");
+		if (buf[i] == '\r' || buf[i] == '\n') {
+			buf[i] = 0;
+			return;
 		}
-	}
-	if (buf[i] == '\r' || buf[i] == '\n') {
-		buf[i] = 0;
-		return;
-	}
 
 	}
 	debugf("line too long\n");
@@ -169,11 +168,11 @@ int main(int argc, char**argv) {
 	int r;
 	int interactive = iscons(0);
 	int echocmods = 0;
-	debugf("\n:::::::::::::::::::::::::::::::::::::::::::::::::::::::::\n");
-	debugf("::													   ::\n");
-	debugf("::					MOS Shell 2023 					   ::\n");
-	debugf("::													   ::\n");
-	debugf(":::::::::::::::::::::::::::::::::::::::::::::::::::::::::\n");
+	debugf("\n::::::::::::::::::::::::::::::::::::::::::::::::::::::\n");
+	debugf("::                                                  ::\n");
+	debugf("::                MOS Shell 2023                    ::\n");
+	debugf("::                                                  ::\n");
+	debugf("::::::::::::::::::::::::::::::::::::::::::::::::::::::\n");
 	ARGBEGIN {
 		case 'i':
 			interactive = 1;
@@ -185,9 +184,10 @@ int main(int argc, char**argv) {
 			usage();
 	}
 	ARGEND
-	if (argc > 1) {
-		usage();
-	}
+
+		if (argc > 1) {
+			usage();
+		}
 	if (argc == 1) {
 		close(0);
 		if ((r = open(argv[1],O_RDONLY)) < 0) {
@@ -195,7 +195,9 @@ int main(int argc, char**argv) {
 		}
 		user_assert(r == 0);
 	}
+	
 	for (;;) {
+	
 		if (interactive) {
 			printf("\n$ ");
 		}

@@ -47,7 +47,7 @@ int cons_read(struct Fd* fd, void* buf, u_int n, u_int offset) {
 		ecall_yield();
 	}
 	if (c != '\r') {
-		
+		debugf("%c",c);	
 	} else {
 		debugf("\n");
 	}

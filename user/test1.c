@@ -1,20 +1,28 @@
 #include <lib.h>
 
-static char* file1 = "/motd";
+int doOepn(int f, char*buf) {
+	int t;
+	while ((t = readn(f,buf,512)) != 0) {
+		debugf("%s",buf);
+	} 
+	close(f);
+	return 0;	
+}
 
 int main() {
-	char buf[1024];
-	debugf("cc\n");
-	int fd1 = open(file1,O_RDONLY);
-	if (fd1 < 0) {
-		user_panic("can't open the file!\n");
+	int r;
+	struct Stat st;
+	if ((r = stat("/motd",&st)) < 0) {
+		user_panic("ffff\n");
 	}
-	debugf("open arrived!\n");
-	if (read(fd1,buf,100) < 0) {
-		user_panic("can't read the file\n");
+	if (st.st_isdir) {
+	
+	} else {
+		debugf("ccccccccccc\n");
 	}
-	buf[101] = 0;
-	debugf(";;;;%s;;;;\n",buf);
-	close(fd1);	
+	/*debugf("cnmmm!\n");
+	char buf[512];
+	int fd = open("/tt",O_RDONLY);
+	doOepn(fd,buf);*/
 	return 0;
 }
