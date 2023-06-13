@@ -31,9 +31,12 @@ void riscv32_init() {
 
 //	ENV_CREATE(user_testipc1);
 //	ENV_CREATE(user_testipc2);
-	ENV_CREATE(user_test2);
+	ENV_CREATE(user_icode);
+//	ENV_CREATE(user_test1);
+//	ENV_CREATE(user_test2);
 	ENV_CREATE(fs_serv);
-	ENV_CREATE(user_test1);
+//	ENV_CREATE(user_test1);
+//	ENV_CREATE(user_test1);
 	SBI_TIMER(200000 + RD_TIME());
 	while(1);
 	

@@ -15,7 +15,7 @@ void cat(int f,char* s) {
 	}
 }
 
-int main(int argc, char* argv) {
+int main(int argc, char** argv) {
 	int f,i;
 	if (argc == 1) {
 		cat(0,"<stdin>");

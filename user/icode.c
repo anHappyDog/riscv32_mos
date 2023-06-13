@@ -5,7 +5,7 @@ int main() {
 	char buf[512 + 1];
 
 	debugf("icode: open /motd\n");
-	if ((fd = open("/moted",O_RDONLY)) < 0) {
+	if ((fd = open("/motd",O_RDONLY)) < 0) {
 		user_panic("icode: open /motd: %d",fd);
 	}
 	debugf("icode: read /motd\n");
@@ -17,7 +17,7 @@ int main() {
 	close(fd);
 	debugf("icode: spawn /init\n");
 	if ((r = spawnl("init.b","init","initarg1","initarg2",NULL)) < 0) {
-		user_panic("icode: spawn /init: %d",r):
+		user_panic("icode: spawn /init: %d",r);
 	}
 	debugf("icode: exiting\n");
 	return 0;

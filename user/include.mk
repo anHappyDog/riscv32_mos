@@ -23,5 +23,5 @@ USERAPPS				:=  num.b		\
 							cat.b		\
 							init.b
 
-INITAPPS := icode.x 
+INITAPPS := icode.x test1.x test2.x
 USERLIB :=	$(addprefix lib/, $(USERLIB)) $(wildcard ../lib/*.o)

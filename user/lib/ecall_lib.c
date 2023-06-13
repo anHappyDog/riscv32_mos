@@ -4,6 +4,10 @@
 #include<ecall.h>
 #include<trap.h>
 
+int ecall_do_withpgdir(int (*do_func)(Pde*)) {
+	return mecall(ECALL_do_withpgdir,do_func);
+}
+
 int ecall_get_pgref(void* v) {
 	return mecall(ECALL_get_pgref,v);
 }

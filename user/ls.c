@@ -20,12 +20,13 @@ void ls(char* path,char* prefix) {
 
 void lsdir(char* path,char* prefix) {
 	int fd,n;
+	struct File f;
 	if ((fd = open(path,O_RDONLY)) < 0) {
 		user_panic("open %s : %d",path,fd);
 	}
 	while ((n =readn(fd,&f,sizeof(f))) == sizeof(f)) {
 		if (f.f_name[0]) {
-			ls1(prefix,f.f_type == FTPYE_DIR,f.f_size,f.f_name);
+			ls1(prefix,f.f_type == FTYPE_DIR,f.f_size,f.f_name);
 		}
 	}
 	if (n > 0) {
@@ -69,7 +70,7 @@ int main(int argc, char** argv) {
 		case 'd':
 		case 'F':
 		case 'l':
-			flag[(u_char)ARGC()];	
+			++flag[(u_char)ARGC()];	
 			break;
 	}
 	ARGEND

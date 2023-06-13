@@ -8,7 +8,7 @@ static int pipe_stat(struct Fd* fd, struct Stat*);
 static int pipe_write(struct Fd* fd, const void* buf, u_int n, u_int offset);
 
 struct Dev devpipe = {
-	.dev_id = 'p';
+	.dev_id = 'p',
 	.dev_name = "pipe",
 	.dev_read = pipe_read,
 	.dev_write = pipe_write,
@@ -21,7 +21,7 @@ struct Dev devpipe = {
 struct Pipe {
 	u_int p_rpos;
 	u_int p_wpos;
-	u_hcar p_buf[BY2PIPE];
+	u_char p_buf[BY2PIPE];
 };
 
 int pipe(int pfd[2]) {
@@ -31,8 +31,8 @@ int pipe(int pfd[2]) {
 	if ((r = fd_alloc(&fd0)) < 0 || (r = ecall_mem_alloc(0,fd0,PTE_D | PTE_R | PTE_W | PTE_U | PTE_LIBRARY)) < 0) {
 		goto err;
 	}
-	if ((r = fd_alloc(&fd1)) < 0 || (r = ecall_mem_allco(0,fd1,PTE_D | PTE_R | PTE_W | PTE_U | PTE_LIBRARY)) < 0) {
-		goto err3;
+	if ((r = fd_alloc(&fd1)) < 0 || (r = ecall_mem_alloc(0,fd1,PTE_D | PTE_R | PTE_W | PTE_U | PTE_LIBRARY)) < 0) {
+		goto err1;
 	}
 	va = fd2data(fd0);
 	if ((r = ecall_mem_alloc(0,va,PTE_D | PTE_R | PTE_W | PTE_U | PTE_LIBRARY) < 0)) {
@@ -50,11 +50,11 @@ int pipe(int pfd[2]) {
 	pfd[1] = fd2num(fd1);
 	return 0;
 err3:
-	ecall_mem_unmap(0,(void*vai);
+	ecall_mem_unmap(0,(void*)va);
 err2:
 	ecall_mem_unmap(0,fd1);
 err1:
-	ecall_mem_map(fd0);
+	ecall_mem_unmap(0,fd0);
 err:
 	return r;
 }
@@ -69,7 +69,7 @@ static int _pipe_is_closed(struct Fd* fd, struct Pipe* p) {
 	return (fd_ref == pipe_ref);
 }
 
-static int pipe_read(struct Fd* fd, void* buf, u_int n, u_int offset) {
+static int pipe_read(struct Fd* fd, void* vbuf, u_int n, u_int offset) {
 	int i;
 	struct Pipe* p = (struct Pipe*)fd2data(fd);
 	char* rbuf = (char*)vbuf;
@@ -108,7 +108,7 @@ static int pipe_write(struct Fd* fd, const void* vbuf, u_int n, u_int offset) {
 int pipe_is_closed(int fdnum) {
 	struct Fd* fd;
 	struct Pipe* p;
-	itn r;
+	int r;
 	if ((r = fd_lookup(fdnum,&fd)) < 0) {
 		return r;
 	}

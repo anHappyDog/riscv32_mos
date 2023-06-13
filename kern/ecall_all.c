@@ -269,9 +269,14 @@ int e_set_env_cow_entry(u_int envid, u_int cow_entry) {
 int e_get_pgdir(Pde** pde) {
 	if (curenv == NULL) {
 		return -E_INVAL;
-	}	
+	}
+	//reflect_pgdir(curenv);		
 	*pde = cur_pgdir;
 	return 0;
+}
+
+int e_do_withpgdir(int(*do_func)(Pde*)) {
+	return do_func(cur_pgdir);
 }
 
 
@@ -300,6 +305,7 @@ void* ecall_table[MAX_ENO] = {
 	[ECALL_write_disk] = e_write_disk,	
 	[ECALL_check_address] = e_check_address,
 	[ECALL_get_pgref] = e_get_pgref,
+	[ECALL_do_withpgdir] = e_do_withpgdir,
 };
 
 

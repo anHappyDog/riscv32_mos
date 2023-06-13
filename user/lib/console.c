@@ -30,7 +30,7 @@ int opencons(void) {
 	if ((r = fd_alloc(&fd)) < 0) {
 		return r;
 	}
-	if ((r = ecall_mem_alloc(0,fd,PTE_D | PTE_LIBRARY)) < 0) {
+	if ((r = ecall_mem_alloc(0,fd,PTE_R | PTE_W | PTE_U | PTE_D | PTE_LIBRARY)) < 0) {
 		return r;
 	}
 	fd->fd_dev_id = devcons.dev_id;
@@ -43,7 +43,7 @@ int cons_read(struct Fd* fd, void* buf, u_int n, u_int offset) {
 	if (n == 0) {
 		return 0;
 	}
-	while((c = ecall_getchar()) == 0) {
+	while((c = ecall_cgetc()) == 0) {
 		ecall_yield();
 	}
 	if (c != '\r') {

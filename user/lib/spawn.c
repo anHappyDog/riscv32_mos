@@ -5,7 +5,7 @@
 
 #define debug 0
 
-int init_stack(u_int child, char**argv,u_int init_sp) {
+int init_stack(u_int child, char**argv,u_int* init_sp) {
 	int argc,i,r,tot;
 	char* strings;
 	u_int *args;
@@ -23,7 +23,7 @@ int init_stack(u_int child, char**argv,u_int init_sp) {
 	}
 	char *ctemp,*argv_temp;
 	u_int j;
-	ctemp = strigns;
+	ctemp = strings;
 	for (i = 0; i < argc; ++i) {
 		argv_temp = argv[i];
 		for (j = 0; j < strlen(argv[i]); ++j) {
@@ -50,7 +50,7 @@ int init_stack(u_int child, char**argv,u_int init_sp) {
 	if ((r = ecall_mem_map(0,(void*)UTEMP,child,(void*)(USTACKTOP - BY2PG),PTE_D | PTE_R | PTE_W | PTE_U)) < 0) {
 		goto error;
 	}
-	if ((r = ecall_mem_unmap(0,(void*)UTMEP)) < 0) {
+	if ((r = ecall_mem_unmap(0,(void*)UTEMP)) < 0) {
 		goto error;
 	}
 	return 0;
@@ -83,7 +83,7 @@ int spawn(char* prog, char** argv) {
 	}
 	int r;
 	u_char elfbuf[512];
-	if (readn(fd,elfbuf,sizeof(Elf32_Ehdr)) != sizeof(Elf32_Ehdr)) {
+	if ((r = readn(fd,elfbuf,sizeof(Elf32_Ehdr)) ) != sizeof(Elf32_Ehdr)) {
 		r = -E_NOT_EXEC;
 		goto err;
 	}
@@ -104,7 +104,7 @@ int spawn(char* prog, char** argv) {
 	}
 	size_t ph_off;
 	ELF_FOREACH_PHDR_OFF(ph_off,ehdr) {
-		if (seek(fd,ph_off) != 0 || readn(fd,elfbuf,ehdr->e_phentsize) != edhr->e_phentsize) {
+		if (seek(fd,ph_off) != 0 || readn(fd,elfbuf,ehdr->e_phentsize) != ehdr->e_phentsize) {
 			goto err1;
 		}
 		Elf32_Phdr *ph = (Elf32_Phdr*)elfbuf;
@@ -113,7 +113,7 @@ int spawn(char* prog, char** argv) {
 			if (read_map(fd,ph->p_offset,&bin) != 0) {
 				goto err1;
 			}
-			if (elf_log_seg(ph_bin,spawn_mapper,&child)) {
+			if (elf_load_seg(ph,bin,spawn_mapper,&child)) {
 				goto err1;
 			}
 		}
@@ -125,12 +125,26 @@ int spawn(char* prog, char** argv) {
 	if ((r = ecall_set_trapframe(child,&tf)) != 0) {
 		goto err2;
 	}
+	Pde* cpgdir;
+	Pte* pte1;
+	ecall_get_pgdir(&cpgdir);
 	for (u_int pdeno = 0; pdeno <= PDX(USTACKTOP);++pdeno) {
-		Pde pde1;
-		Pte pte1;
-		ecall_check_address(
-
-		if ()
+		if (!(cpgdir[pdeno] & PTE_V)) {
+			continue;
+		}
+		for (u_int pteno = 0; pteno <= PTX(~0); ++pteno) {
+			pte1 = (Pde*)((cpgdir[pdeno] >> 10) << 12);
+			u_int pn = (pdeno << 10) + pteno;
+			u_int perm = pte1[pteno] & ((0x3 << 30) | ((1 << 10) - 1));
+			if ((perm & PTE_V) && (perm & PTE_LIBRARY)) {
+				void* va = (void*)(pn << PGSHIFT);
+				if ((r = ecall_mem_map(0,va,child,va,perm)) < 0) {
+					debugf("spawn: ecall_mem_map %x %x:%d\n",va,child,r);
+					goto err2;
+				}
+			}
+			
+		}
 	}
 	if ((r = ecall_set_env_status(child,ENV_RUNNABLE)) < 0) {
 		debugf("spawn: ecall_set_env_status %x: %d\n",child,ENV_RUNNABLE);

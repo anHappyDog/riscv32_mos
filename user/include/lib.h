@@ -37,7 +37,7 @@ void _user_halt(const char*,int, const char*, ...) __attribute__ ((noreturn));
 
 
 int spawn(char* prog, char** argv);
-int spawn1(char* prot, char* args, ...);
+int spawnl(char* prot, char* args, ...);
 int fork();
 
 
@@ -57,6 +57,7 @@ int ecall_get_pgref(void* v);
 __attribute__((always_inline)) inline static int ecall_exofork(void) {
 	return mecall(ECALL_exofork,0,0,0,0,0);
 }
+int ecall_do_withpgdir(int (*do_func)(Pde*)); 
 int ecall_set_env_cow_entry(u_int envid,u_int cow_entry);
 int ecall_set_env_status(u_int envid, u_int status);
 int ecall_set_trapframe(u_int envid, struct Trapframe* tf);
@@ -82,15 +83,15 @@ int opencons(void);
 int iscons(int fdnum);
 
 //pipe.c
-// int pipe(int pfd[2]);
-// pipe_is_closed(int fdnum);
+int pipe(int pfd[2]);
+int pipe_is_closed(int fdnum);
 
 //pageref.c
 int pageref(void*v);
 
 //fprintf.c
-//int fprintf(int fd, const char* fmt,...);
-//int pritnf(const char *fmt, ...);
+int fprintf(int fd, const char* fmt,...);
+int printf(const char *fmt, ...);
 
 //fsipc.c
 int fsipc_open(const char*, u_int, struct Fd*);

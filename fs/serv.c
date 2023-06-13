@@ -73,7 +73,6 @@ void serve_open(u_int envid, struct Fsreq_open* rq) {
 	if ((r = open_alloc(envid,&o)) < 0) {
 		ipc_send(envid,r,0,0);
 	}
-
 	if ((r = file_open(rq->req_path,&f)) < 0) {
 		ipc_send(envid,r,0,0);
 		return;

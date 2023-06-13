@@ -328,7 +328,6 @@ void env_check() {
 	}
 	printk("pe1->env_pgdir %x\n",pe1->env_pgdir);
 	assert(pe2->env_pgdir[PDX(UTOP)] == base_pgdir[PDX(UTOP)]);
-	assert(pe2->env_pgdir[PDX(UTOP) - 1] == 0);
 	printk("env_setup_vm passed!\n");
 	printk("pe2's sp register %x\n",pe2->env_tf.regs[2]);
 

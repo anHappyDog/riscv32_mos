@@ -1,7 +1,7 @@
 #include <args.h>
 #include <lib.h>
 
-#define WHITESPACE " \t\r\n";
+#define WHITESPACE " \t\r\n"
 #define SYMBOLS "<|>&;()"
 
 int _gettoken(char*s, char** p1, char**p2) {
@@ -11,7 +11,7 @@ int _gettoken(char*s, char** p1, char**p2) {
 		return 0;
 	}
 	while(strchr(WHITESPACE,*s)) {
-		*s++ 0;
+		*s++ = 0;
 	}
 	if (*s == 0) {
 		return 0;	
@@ -50,7 +50,7 @@ int parsecmd(char** argv, int*rightpipe) {
 	int argc = 0;
 	while(1) {
 		char* t;
-		int fd,r;
+		int fd;
 		int c = gettoken(0,&t);
 		switch (c) {
 			case 0:

@@ -1,6 +1,6 @@
 include include.mk
 
-lab						:= 4
+lab						:= ($(shell cat .mos-this-lab 2>/dev/null || echo 6)
 
 target_dir              := target
 mos_elf                 := $(target_dir)/mos
@@ -21,6 +21,8 @@ disk_flags				:= -global virtio-mmio.force-legacy=false -drive file=$(user_disk)
 
 objects                 := $(addsuffix /*.o, $(modules)) $(addsuffix /*.x, $(user_modules)) 
 modules                 += $(user_modules)
+
+lab-ge = $(shell [ "$$(echo $(lab)_ | cut -f1 -d1)" -ge $(1) ] && echo true)
 
 
 .PHONY: all test tools dts dtb fs-image  $(modules) clean run gdb objdump  clean-and-all

@@ -3,7 +3,7 @@
 struct {
 	char msg1[5000];
 	char msg2[1000];
-} data = {"this is initalized data","so is this"};
+} data = {"this is initialized data","so is this"};
 
 char bss[6000];
 
@@ -17,7 +17,7 @@ int sum(char* s,int n) {
 }
 
 int main(int argc, char** argv) {
-	itn i,r,x,want;
+	int i,r,x,want;
 	debugf("init: running\n");
 	want = 0xf989e;
 	if ((x = sum((char*)&data,sizeof(data))) != want) {

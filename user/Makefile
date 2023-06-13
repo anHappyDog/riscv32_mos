@@ -23,7 +23,7 @@ include include.mk
 
 .PHONY: all clean
 
-all: $(USERLIB) $(INITAPPS)
+all: $(USERLIB) $(INITAPPS) $(USERAPPS)
 
 clean:
 	rm -rf *~ *.o *.b.c *.x *.b lib/*.o

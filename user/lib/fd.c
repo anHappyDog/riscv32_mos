@@ -41,7 +41,7 @@ int fd_lookup(int fdnum,struct Fd** fd) {
 		return -E_INVAL;
 	}
 	va = INDEX2FD(fdnum);
-	if (ecall_check_address((void*)(va / BY2PG),0,0) != 0) {
+	if (ecall_check_address((void*)va,0,0) != 0) {
 		*fd = (struct Fd*)va;
 		return 0;
 	}

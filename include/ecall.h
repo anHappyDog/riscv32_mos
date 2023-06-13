@@ -28,6 +28,7 @@ enum {
 	ECALL_write_disk,
 	ECALL_check_address,
 	ECALL_get_pgref,
+	ECALL_do_withpgdir,
 	MAX_ENO,	
 
 };
