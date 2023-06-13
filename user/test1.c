@@ -1,5 +1,6 @@
 #include <lib.h>
 
+
 int doOepn(int f, char*buf) {
 	int t;
 	while ((t = readn(f,buf,512)) != 0) {
@@ -10,8 +11,11 @@ int doOepn(int f, char*buf) {
 }
 
 int main() {
-	int r;
+	//int r;
 	struct Stat st;
+	int fd = open("/motd",O_RDONLY);
+	fstat(fd,&st);
+	/*
 	if ((r = stat("/motd",&st)) < 0) {
 		user_panic("ffff\n");
 	}
@@ -19,7 +23,7 @@ int main() {
 	
 	} else {
 		debugf("ccccccccccc\n");
-	}
+	}*/
 	/*debugf("cnmmm!\n");
 	char buf[512];
 	int fd = open("/tt",O_RDONLY);

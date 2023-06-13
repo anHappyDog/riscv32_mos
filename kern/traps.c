@@ -82,8 +82,9 @@ void do_ecall_from_u(struct Trapframe* tf) {
 void do_store_page(struct Trapframe* tf) {
 	Pte* pte1;
 	struct Page* pp = page_lookup(cur_pgdir,tf->stval,&pte1);
-	printk("curenv is %08x,st->stval is %08x\n",curenv->env_id,tf->stval);
+	//printk("curenv is %08x,st->stval is %08x\n",curenv->env_id,tf->stval);
 	if ((*pte1 & PTE_COW) == PTE_COW) {
+	//	printk("aaaaaaaaaaaaaaaaaa\n");
 		*((struct Trapframe*)UXSTACKTOP - 1) = *tf;
 
 		if (tf->regs[2] < USTACKTOP || tf->regs[2] >= UXSTACKTOP) {
@@ -105,7 +106,7 @@ void do_store_page(struct Trapframe* tf) {
 	else {
 	//	print_tf(tf);
 	//	panic("do_store_page doesn't have pte_cow\n");
-		printk("---:%08x\n",tf->stval);
+	//	printk("---:%08x\n",tf->stval);
 		if (page_insert(curenv->env_pgdir,curenv->env_asid,pp,ROUNDDOWN(tf->stval,BY2PG),*pte1 | PTE_W | PTE_U) != 0) {
 			panic("ccccccccccccccccccc do _store");
 		}

@@ -42,7 +42,7 @@ void lsdir(char* path,char* prefix) {
 }
 
 void ls(char* path,char* prefix) {
-/*	int r;
+	int r;
 	struct Stat st;
 	if ((r = stat(path,&st)) < 0) {
 		user_panic("stat %s: %d",path,r);
@@ -51,8 +51,8 @@ void ls(char* path,char* prefix) {
 		lsdir(path,prefix);
 	} else {
 		ls1(0,st.st_isdir,st.st_size,path);
-	}*/
-	lsdir("/","");
+	}
+	//lsdir("/","");
 }
 
 void usage(void) {
@@ -73,6 +73,7 @@ int main(int argc, char** argv) {
 	}
 	ARGEND
 	if (argc == 0) {
+		int sp;
 		ls("/","");
 	} else {
 		for (i = 0; i < argc; ++i) {

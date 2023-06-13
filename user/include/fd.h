@@ -1,5 +1,5 @@
 #ifndef _USER_FD_H_
-#define _USER_FD_H_ 1 
+#define _USER_FD_H_  
 
 #include <fs.h>
 
@@ -35,7 +35,7 @@ struct Fd {
 };
 
 struct Stat {
-	char st_name[MAXFILESIZE];
+	char st_name[MAXNAMELEN];
 	u_int st_size;
 	u_int st_isdir;
 	struct Dev * st_dev;

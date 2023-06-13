@@ -94,7 +94,6 @@ int spawn(char* prog, char** argv) {
 	}
 	u_long entrypoint = ehdr->e_entry;
 	u_int child = ecall_exofork();
-	debugf("spawn child is %08x\n",child);
 	if (child < 0) {
 		r = -E_NOT_EXEC;
 		goto err;
