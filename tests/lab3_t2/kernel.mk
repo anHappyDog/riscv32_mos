@@ -1,1 +1,1 @@
-init-override := $(test_dir)/init.c
+init-envs := t1 t2 t3

@@ -1,11 +1,12 @@
 #include <lib.h>
 
-const char file1[100] = "/motd";
+const char file1[100] = "/newmotd";
 
 int main() {
-	int r;
-	struct Stat st;
-	r = stat(file1,&st);
-
+	char buf[512];
+	int fd = open(file1,O_RDONLY);
+	read(fd,buf,512);
+	close(fd);
+	debugf(buf);
 	return 0;
 }
