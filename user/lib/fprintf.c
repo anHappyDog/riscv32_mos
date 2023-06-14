@@ -11,6 +11,7 @@ static void print_output(void* data, const char* s, size_t l) {
 	if (ctx->ret < 0) {
 		return;
 	}
+	//debugf("s is ;%s;\n",s);
 	int r = write(ctx->fd,s,l);
 	if (r < 0) {
 		ctx->ret = r;

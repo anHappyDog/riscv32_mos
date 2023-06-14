@@ -69,7 +69,10 @@ int parsecmd(char** argv, int*rightpipe) {
 				}
 				fd = open(t,O_RDONLY);
 				if (fd < 0) {
-					user_panic("file can't be opened!\n");
+					fd = open(t,O_RDONLY| O_CREAT);
+					if (fd < 0) {
+						user_panic("file can't be opened!\n");
+					}
 				}
 				dup(fd,0);
 				close(fd);
@@ -81,7 +84,10 @@ int parsecmd(char** argv, int*rightpipe) {
 				}
 				fd = open(t,O_WRONLY);
 				if (fd < 0) {
-					user_panic("file can't be opened!\n");
+					fd = open(t,O_WRONLY | O_CREAT);
+					if (fd < 0) {
+						user_panic("file can't be opened!\n");
+					}
 				}
 				dup(fd,1);
 				close(fd);
@@ -91,13 +97,17 @@ int parsecmd(char** argv, int*rightpipe) {
 				pipe(p);
 				if ((*rightpipe = fork()) == 0) {
 					dup(p[0],0);
+			//	debugf("*rightpipe is %08x,1 ref is %08x,0 ref is %08x\n",*rightpipe,pageref(num2fd(1)),pageref(num2fd(0)));
 					close(p[0]);
 					close(p[1]);
+				//	debugf("fd1 ref is %08x,fd0 ref is %08x, pipe ref is %08x\n",pageref(num2fd(p[1])),pageref(num2fd(p[0])),pageref(fd2data(num2fd(p[1]))));
 					return parsecmd(argv,rightpipe);
 				} else {
 					dup(p[1],1);
+			//	debugf("*rightpipe is %08x,1 ref is %08x,0 ref is %08x\n",*rightpipe,pageref(num2fd(1)),pageref(num2fd(0)));
 					close(p[1]);
 					close(p[0]);
+				//	debugf("fd1 ref is %08x,fd0 ref is %08x, pipe ref is %08x\n",pageref(num2fd(p[1])),pageref(num2fd(p[0])),pageref(fd2data(num2fd(p[1]))));
 					return argc;
 				}
 				break;
@@ -107,16 +117,17 @@ int parsecmd(char** argv, int*rightpipe) {
 	return argc;
 }
 
-void runcmd(char* s) {
+int runcmd(char* s) {
 	gettoken(s,0);
 	char* argv[MAXARGS];
 	int rightpipe = 0;
 	int argc = parsecmd(argv,&rightpipe);
 	if (argc == 0) {
-		return;
+		return 1;
 	}
 	argv[argc] = 0;
 	int child = spawn(argv[0],argv);
+	close_all();
 	if (child >= 0) {
 		wait(child);
 	} else {

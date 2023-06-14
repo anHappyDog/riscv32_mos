@@ -6,9 +6,10 @@ void cat(int f,char* s) {
 	long n;
 	int r;
 	while ((n = readn(f,buf,(long)sizeof buf)) > 0) {
-		if ((r = write(1,buf,n)) != n) {
+/*		if ((r = write(1,buf,n)) != n) {
 			user_panic("write error copying %s : %d",s,r);
-		}
+		}*/
+		//debugf("%s",buf);
 	}
 	if (n < 0) {
 		user_panic("error reading: %s :%d",s,n);

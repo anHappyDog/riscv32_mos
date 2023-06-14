@@ -81,8 +81,8 @@ void close_all(void) {
 int dup(int oldfdnum,int newfdnum) {
 	int i,r;
 	void* ova,*nva;
-	Pte pte1;
-	Pde pde1;
+	Pte pte1 = 0;
+	Pde pde1 = 0;
 	struct Fd* oldfd,*newfd;
 	if ((r = fd_lookup(oldfdnum,&oldfd)) < 0) {
 		return r;
@@ -93,23 +93,29 @@ int dup(int oldfdnum,int newfdnum) {
 	nva = fd2data(newfd);
 	ecall_check_address(ova,&pde1,&pte1);
 	//NOTICE
-	if (pde1) {
+	if (pde1  != 0) {
 		for (i = 0; i < PDMAP; i += BY2PG) {
-			ecall_check_address((ova + i),&pde1,&pte1); 
+			pte1 = 0;
+			pde1 = 0;
+			ecall_check_address((ova + i),&pde1,&pte1);
 			if (pte1 & PTE_V) {
-				if ((r = ecall_mem_map(0,(void*)(ova + i),0,(void*)(nva + i),((pte1 & (PTE_D | PTE_LIBRARY)) | PTE_R | PTE_W | PTE_U))) < 0) {
+				if ((r = ecall_mem_map(0,(void*)(ova + i),0,(void*)(nva + i),((pte1 & (PTE_D | PTE_LIBRARY | PTE_R | PTE_W | PTE_U | PTE_DIRTY))))) < 0) {
+				//	debugf("r is %d\n",r);
+					//debugf("srcva is %08x,ova + i is %08x\n",ova,ova + i);
 					goto err;	
 				}
 			}
 		}
 
 	}
-
+	pte1 = 0;
 	ecall_check_address(oldfd,0,&pte1);
-	if ((r = ecall_mem_map(0,oldfd,0,newfd,((pte1 & (PTE_D | PTE_LIBRARY)) | PTE_R | PTE_W | PTE_U ))) < 0) {
+	if ((r = ecall_mem_map(0,oldfd,0,newfd,((pte1 & (PTE_D | PTE_LIBRARY | PTE_R | PTE_W | PTE_U | PTE_DIRTY))))) < 0) {
+		debugf("faaaaaaaaaaaabbb\n");
 		goto err;
 	}
-
+	/*struct Fd* fddd = (struct Fd*)INDEX2FD(newfdnum);
+	debugf("fddd->fd_omode is %08x\n",fddd->fd_omode);*/
 	return newfdnum;
 err:			
 	ecall_mem_unmap(0,newfd);
@@ -158,6 +164,7 @@ int write(int fdnum, const void* buf, u_int n) {
 		return r;
 	}
 	if ((fd->fd_omode & O_ACCMODE) == O_RDONLY) {
+	//	debugf("fd->fd_omode is %08x\n",fd->fd_omode);
 		return -E_INVAL;
 	}
 	r = dev->dev_write(fd,buf,n,fd->fd_offset);

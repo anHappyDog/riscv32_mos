@@ -10,11 +10,12 @@ int doOepn(int f, char*buf) {
 	return 0;	
 }
 
-int main() {
+int main(int argc,char**argv) {
 	//int r;
 	struct Stat st;
-	int fd = open("/motd",O_RDONLY);
-	fstat(fd,&st);
+	int fd = open("/motd",O_RDWR);
+	write(fd,argv[1],strlen(argv[1]));
+	close(fd);
 	/*
 	if ((r = stat("/motd",&st)) < 0) {
 		user_panic("ffff\n");

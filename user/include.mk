@@ -22,6 +22,14 @@ USERAPPS				:=  num.b		\
 							sh.b		\
 							cat.b		\
 							init.b 		\
+							test1.b		\
+							testarg.b 	\
+							testbss.b   \
+							testfdsharing.b	\
+							testpipe.b	\
+							testpiperace.b \
+							testptelibrary.b	\
+							touch.b	\
 							test1.b
 
 INITAPPS := icode.x  

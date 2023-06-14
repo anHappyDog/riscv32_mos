@@ -68,8 +68,6 @@ int fork(void) {
 	for (i = VPN(USTACKTOP) - 1; i >= 0;--i) {
 		if (pg[i >> 10] & PTE_V) {
 			pt =(Pte*)PADDR(PTE_ADDR(pg[i >> 10])) + (i % 1024);
-
-			//debugf("-----%d --- %08x  pt : %08x\n",i, (i << 12),*pt);
 			if (*pt & PTE_V) {
 				duppage(child,i,(*pt & 0xc00003ff));
 			}
