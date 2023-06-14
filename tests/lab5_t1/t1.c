@@ -11,6 +11,9 @@ int main() {
 	close(fd);
 	debugf("buf is ;\n%s;\n",buf);
 	fd = open(file1,O_RDWR);
+	for (int i = 0; i < 512; ++i) {
+		buf1[i] = 0;
+	}
 	write(fd,buf1,512);
 	close(fd);
 	fd = open(file1,O_RDONLY);
