@@ -4,17 +4,10 @@
 #include<ecall.h>
 #include<trap.h>
 
-int ecall_do_withpgdir(int (*do_func)(Pde*)) {
-	return mecall(ECALL_do_withpgdir,do_func);
-}
-
-int ecall_get_pgref(void* v) {
+int ecall_get_pgref(void*v) {
 	return mecall(ECALL_get_pgref,v);
 }
 
-int ecall_check_address(void*v,Pde* pde, Pte* pte) {
-	return mecall(ECALL_check_address,v,pde,pte);
-}
 
 void ecall_read_disk(uint32_t lowsec,uint32_t highsec,void*buf,int nsec) {
 	mecall(ECALL_read_disk,lowsec,highsec,buf,nsec);

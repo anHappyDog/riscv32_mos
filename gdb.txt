@@ -1,0 +1,6 @@
+Already logging to gdb.txt.
+Continuing.
+[Inferior 1 (process 1) exited normally]
+No stack.
+The program is not being run.
+Undefined command: "cq".  Try "help".

@@ -9,7 +9,8 @@
 #include <ecall.h>
 #include <trap.h>
 
-
+#define vpt ((volatile Pte*)UVPT)
+#define vpd ((volatile Pde*)(UVPT + (PDX(UVPT) << PGSHIFT)))
 #define envs ((volatile struct Env*)UENVS)
 #define pages ((volatile struct Page*)UPAGES)
 
@@ -52,12 +53,9 @@ int ecall_env_destroy(u_int envid);
 int ecall_mem_alloc(u_int envid, void* va, u_int perm);
 int ecall_mem_map(u_int srcid, void* srcva,u_int dstid, void* dstva, u_int perm);
 int ecall_mem_unmap(u_int envid, void* va);
-int ecall_get_pgdir(Pde** pde);
-int ecall_get_pgref(void* v); 
 __attribute__((always_inline)) inline static int ecall_exofork(void) {
 	return mecall(ECALL_exofork,0,0,0,0,0);
 }
-int ecall_do_withpgdir(int (*do_func)(Pde*)); 
 int ecall_set_env_cow_entry(u_int envid,u_int cow_entry);
 int ecall_set_env_status(u_int envid, u_int status);
 int ecall_set_trapframe(u_int envid, struct Trapframe* tf);
@@ -68,8 +66,8 @@ int ecall_cgetc();
 int ecall_write_dev(void*,u_int,u_int);
 int ecall_read_dev(void*,u_int,u_int);
 void ecall_write_disk(uint32_t lowsec,uint32_t highsec,void*buf,int nsec); 
-void ecall_read_disk(uint32_t lowsec,uint32_t highsec,void*buf,int nsec); 
-int ecall_check_address(void* v,Pde* pde, Pte* pte);
+void ecall_read_disk(uint32_t lowsec,uint32_t highsec,void*buf,int nsec);
+int ecall_get_pgref(void*v);
 
 //ipc
 void ipc_send(u_int whom,u_int val, const void* srcva, u_int perm);

@@ -1,19 +1,14 @@
 #include <env.h>
 #include <lib.h>
 #include <mmu.h>
-extern Pde* curenv_pgdir;
 
 static void __attribute__((noreturn)) cow_entry(struct Trapframe* tf) {
 	u_int va = tf->stval;
 	u_int perm;
-	Pde* pd; 
-	if (ecall_get_pgdir(&pd) != 0) {
-		user_panic("pgdir is NULL !\n");
-	}
+
 	//debugf("va is %08x\n",va);
 	//debugf("stval is %08x\n",tf->stval);
-	Pte* pt = (Pte*)PADDR(PTE_ADDR(pd[PDX(va)])) + PTX(va);
-	perm = *pt & 0xc00003ff;
+	perm = vpt[VPN(va)] & 0xc00003ff;
 	//debugf("perm is %08x\n",perm);
 	if ((perm & PTE_COW) == 0) {
 		user_panic("PERM doesn't have PTE_COW\n");
@@ -38,6 +33,7 @@ static void duppage(u_int envid, u_int vpn, u_int perm) {
 	u_int addr;
 	addr = vpn << PGSHIFT;
 
+			//debugf("perm is %08x\n",perm);
 	if ((perm & PTE_W) == 0 || (perm & PTE_LIBRARY) == PTE_LIBRARY || (perm & PTE_COW) == PTE_COW) {
 		ecall_mem_map(0,(void*)addr,envid,(void*)addr,perm);
 	}	
@@ -59,18 +55,13 @@ int fork(void) {
 	child = ecall_exofork();
 	if (child == 0) {
 		env = envs + ENVX(ecall_getenvid());
-		curenv_pgdir = env->env_pgdir;
 		return 0;
 	}
-	Pde* pg;
-	Pte* pt;
-	ecall_get_pgdir(&pg);
-	for (i = VPN(USTACKTOP) - 1; i >= 0;--i) {
-		if (pg[i >> 10] & PTE_V) {
-			pt =(Pte*)PADDR(PTE_ADDR(pg[i >> 10])) + (i % 1024);
-			if (*pt & PTE_V) {
-				duppage(child,i,(*pt & 0xc00003ff));
-			}
+	for (i = 0; i < VPN(USTACKTOP);++i) {	
+		if (vpt[i] & PTE_V && (vpd[i >> 10] & PTE_V)) {
+			//debugf("addr::%08x\n",i << PGSHIFT);
+			//debugf("vpt[%d] is %08x\n",i,vpt[i]);
+			duppage(child,i,(vpt[i] & 0xc00003ff));
 		}
 	}
 	ecall_set_env_cow_entry(child,(u_int)cow_entry);

@@ -146,7 +146,7 @@ int pgdir_init_fill(Pde* pgdir,u_long va,u_long pa,u_long perm) {
 		try(page_alloc(&pp));
 		*pgdir_entryp = page2ptx(pp) | PTE_V;
 		pp->pp_ref += 1;
-		pgdir_init_fill(pgdir,page2addr(pp),page2addr(pp),PTE_R | PTE_W);
+		//pgdir_init_fill(pgdir,page2addr(pp),page2addr(pp),PTE_R | PTE_W);
 	}
 	pte = (Pte*)PADDR(PTE_ADDR(*pgdir_entryp)) + PTX(va);
 	*pte = ((pa >> 12) << 10) | PTE_V | perm;
@@ -166,7 +166,7 @@ static int pgdir_walk(Pde* pgdir, u_long va, int create, Pte** ppte) {
 			}
 			*pgdir_entryp = page2ptx(pp) |  PTE_V;
 			pp->pp_ref += 1;
-			pgdir_init_fill(pgdir,page2addr(pp),page2addr(pp),PTE_W | PTE_R);
+			//pgdir_init_fill(pgdir,page2addr(pp),page2addr(pp),PTE_W | PTE_R);
 			//	page_insert(pgdir,curenv->env_asid,pp,page2addr(pp), PTE_R | PTE_W);
 		}
 		else {

@@ -100,15 +100,12 @@ static int pipe_read(struct Fd* fd, void* vbuf, u_int n, u_int offset) {
 static int pipe_write(struct Fd* fd, const void* vbuf, u_int n, u_int offset) {
 	int i;
 	char* wbuf = (char*)vbuf;
-	//debugf("write,fd is %08x,,fd ref is %08x,pipe ref is %08x\n",fd2num(fd),pageref(fd),pageref(fd2data(fd)));
 	struct Pipe* p =  (struct Pipe*)fd2data(fd);
-	//debugf("wbuf is %s\n",wbuf);
 	for (i = 0; i < n;) {
 		if (p->p_wpos - p->p_rpos == BY2PIPE) {
 			if (_pipe_is_closed(fd,p) == 1) {
 				return i;
 			} else {
-	//			debugf("write yield!,the buf is %s\n",wbuf + i);
 				ecall_yield();
 			}
 		} else {
@@ -132,11 +129,8 @@ int pipe_is_closed(int fdnum) {
 }
 
 static int pipe_close(struct Fd* fd) {
-	//debugf("pipe_closed !!!,fd2num is %08x\n",fd2num(fd));
-	//debugf("before,fd ref is %08x,pipe ref is %08x\n",pageref(fd),pageref(fd2data(fd)));
 	ecall_mem_unmap(0,fd);
 	ecall_mem_unmap(0,(void*)fd2data(fd));
-	//debugf("after,fd is %08x,fd ref is %08x,pipe ref is %08x\n",fd2num(fd),pageref(fd),pageref(fd2data(fd)));
 	return 0;
 }
 

@@ -96,8 +96,7 @@ int read_map(int fdnum, u_int offset, void** blk) {
 	if (offset >= MAXFILESIZE) {
 		return -E_NO_DISK;
 	}
-	Pte pte;
-	if (ecall_check_address(va,0,&pte) != 0) {
+	if (!(vpd[PDX(va)] & PTE_V) || !(vpt[VPN(va)] & PTE_V)) {
 		return -E_NO_DISK;
 	}
 	*blk = (void*)va;

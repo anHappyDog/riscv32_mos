@@ -40,17 +40,51 @@ void (*exception_handlers[32])(void) = {
 };
 
 void do_load_page(struct Trapframe* tf) {
-	Pte* pte1;
-	struct Page* pp = page_lookup(curenv->env_pgdir,tf->stval,&pte1);
-	if (pp == NULL && page_alloc(&pp) != 0) {
-		panic("load page : alloc failed!\n");
+	u_int stval = tf->stval;
+	if (stval < UVPT) {
+		Pte* pte1;
+		struct Page* pp = page_lookup(curenv->env_pgdir,tf->stval,&pte1);
+		if (pp == NULL && page_alloc(&pp) != 0) {
+			panic("load page : alloc failed!\n");
+		}
+		if (page_insert(curenv->env_pgdir,curenv->env_asid,pp,ROUNDDOWN(tf->stval,BY2PG),*pte1 | PTE_R | PTE_U) != 0) {
+			panic("insert page failed!\n");
+		}
+
+	} else if (stval >= UVPT && stval < ULIM){
+		Pde* pgdir = curenv->env_pgdir;
+		Pde* pd = pgdir + PDX(UVPT);
+		Pte* pt;
+		if (*pd == 0) {
+			struct Page* pp;
+			page_alloc(&pp);
+			pp->pp_ref += 1;
+			*pd = page2ptx(pp) | PTE_V;
+		} 
+		for (int i = 0; i < 1024; ++i) {
+			pt = (Pte*)PADDR(PTE_ADDR(*(pgdir + i)));
+			if (pt == 0) {
+				struct Page* pp;
+				page_alloc(&pp);
+				*(pgdir + i) = page2ptx(pp) | PTE_V;
+				pp->pp_ref += 1;
+				page_insert(pgdir,curenv->env_asid,pp,(UVPT + (i << PGSHIFT)),PTE_R | PTE_U);
+			} else {
+				page_insert(pgdir,curenv->env_asid,addr2page((u_long)pt),(UVPT + (i << PGSHIFT)),PTE_R | PTE_U);	
+			}	
+		}
+		page_insert(pgdir,curenv->env_asid,addr2page((u_long)pgdir),(UVPT + (PDX(UVPT) << PGSHIFT)),PTE_R | PTE_U);
+	} else {
+		Pte* pte1;
+		struct Page* pp = page_lookup(curenv->env_pgdir,tf->stval,&pte1);
+		if (pp == NULL && page_alloc(&pp) != 0) {
+			panic("load page : alloc failed!\n");
+		}
+		if (page_insert(curenv->env_pgdir,curenv->env_asid,pp,ROUNDDOWN(tf->stval,BY2PG),*pte1 | PTE_R | PTE_U) != 0) {
+			panic("insert page failed!\n");
+		}
 	}
-	/*if (page_alloc(&pp) != 0) {
-	  panic("alloc page failed!\n");
-	  }*/
-	if (page_insert(curenv->env_pgdir,curenv->env_asid,pp,ROUNDDOWN(tf->stval,BY2PG),*pte1 | PTE_R | PTE_U) != 0) {
-		panic("insert page failed!\n");
-	}
+
 }
 
 

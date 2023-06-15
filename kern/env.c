@@ -118,8 +118,7 @@ void env_init(void) {
 	base_pgdir = (Pde*)page2addr(p);
 	//panic("-----%08x\n",ROUND((u_long)pages - 0x80200000,BY2PG));
 	//panic("------envs : %08x    pages : %08x\n",envs,pages);
-
-	pgdir_init_fill(base_pgdir,base_pgdir,base_pgdir,PTE_G | PTE_R | PTE_W);	
+	pgdir_init_fill(base_pgdir,(u_long)base_pgdir,(u_long)base_pgdir,PTE_G | PTE_R | PTE_W);	
 	for (addr = KERNSTART;addr < ROUNDDOWN((u_long)envs,BY2PG);addr += BY2PG) {
 		pgdir_init_fill(base_pgdir,addr,addr,PTE_G | PTE_R | PTE_X);
 	}
@@ -129,16 +128,21 @@ void env_init(void) {
 	for (addr = KERNEND;addr < ROUNDDOWN((u_long)pages,BY2PG);addr += BY2PG) {
 		pgdir_init_fill(base_pgdir,addr,addr,PTE_G | PTE_R | PTE_X);
 	}
-	for (addr = ROUNDDOWN((u_long)pages,BY2PG);addr < 0X88000000;addr += BY2PG) {
+
+	map_segment(base_pgdir,0,(u_long)pages,(u_long)pages,ROUND(npage * sizeof(struct Page),BY2PG),PTE_G | PTE_R | PTE_W);
+	/*for (addr = ROUNDDOWN((u_long)pages,BY2PG);addr < ROUND(pages + npage * sizeof(struct Page),BY2PG);addr += BY2PG) {
 		pgdir_init_fill(base_pgdir,addr,addr,PTE_G | PTE_R | PTE_W);
-	}
-	pgdir_init_fill(base_pgdir,(u_long)disk,(u_long)disk,PTE_G | PTE_R | PTE_W);
-	pgdir_init_fill(base_pgdir,(u_long)disk->desc,(u_long)disk->desc,PTE_G | PTE_R | PTE_W);
-	pgdir_init_fill(base_pgdir,(u_long)disk->avail,(u_long)disk->avail,PTE_G | PTE_R | PTE_W);
-	pgdir_init_fill(base_pgdir,(u_long)disk->used,(u_long)disk->used,PTE_G | PTE_R | PTE_W);
-	
-	map_segment(base_pgdir,0,(u_long)pages,UPAGES,ROUND(npage * sizeof(struct Page),BY2PG),PTE_G |  PTE_R | PTE_U);
-	map_segment(base_pgdir,0,(u_long)envs,UENVS,ROUND(NENV * sizeof(struct Env),BY2PG), PTE_G | PTE_R | PTE_U);
+	}*/
+	for (addr = ROUND(pages + npage * sizeof(struct Page),BY2PG);addr < 0X88000000; addr += BY2PG) {
+		pgdir_init_fill(base_pgdir,addr,addr,PTE_G | PTE_R | PTE_W);
+	} 
+
+	map_segment(base_pgdir,0,(u_long)disk,(u_long)disk,BY2PG,PTE_G | PTE_R | PTE_W);
+	map_segment(base_pgdir,0,(u_long)disk->desc,(u_long)disk->desc,BY2PG,PTE_G | PTE_R | PTE_W);
+	map_segment(base_pgdir,0,(u_long)disk->avail,(u_long)disk->avail,BY2PG,PTE_G | PTE_R | PTE_W);
+	map_segment(base_pgdir,0,(u_long)disk->used,(u_long)disk->used,BY2PG,PTE_G | PTE_R | PTE_W);	
+	map_segment(base_pgdir,0,(u_long)pages,UPAGES,ROUND(npage * sizeof(struct Page),BY2PG),PTE_R | PTE_U);
+	map_segment(base_pgdir,0,(u_long)envs,UENVS,ROUND(NENV * sizeof(struct Env),BY2PG), PTE_R | PTE_U);
 	pgdir_map(base_pgdir,0,DISK_ADDRESS - KERNSTART ,DISK_ADDRESS,PTE_R | PTE_W | PTE_G | PTE_LIBRARY);
 	printk("envs's address is 0x%08x\n",envs);
 	printk("env_init : envs int finished !\n");

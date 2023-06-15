@@ -23,10 +23,15 @@ int fd_alloc(struct Fd** fd) {
 	u_int fdno;
 	for (fdno = 0; fdno < MAXFD - 1; ++fdno) {
 		va = INDEX2FD(fdno);
-		if (ecall_check_address((void*)va,0,0) != 0) {
+		if ((vpd[va / PDMAP] & PTE_V) == 0) {
 			*fd = (struct Fd*)va;
 			return 0;
 		}
+		if ((vpt[va / BY2PG] & PTE_V) == 0) {
+			*fd = (struct Fd*)va;
+			return 0;
+		}
+	
 	}
 	return -E_MAX_OPEN;
 }
@@ -41,10 +46,10 @@ int fd_lookup(int fdnum,struct Fd** fd) {
 		return -E_INVAL;
 	}
 	va = INDEX2FD(fdnum);
-	if (ecall_check_address((void*)va,0,0) == 0) {
+	if ((vpt[va / BY2PG] & PTE_V) != 0) {
 		*fd = (struct Fd*)va;
 		return 0;
-	}
+	}	
 	return -E_INVAL;
 }
 
@@ -81,8 +86,7 @@ void close_all(void) {
 int dup(int oldfdnum,int newfdnum) {
 	int i,r;
 	void* ova,*nva;
-	Pte pte1 = 0;
-	Pde pde1 = 0;
+	u_int pte;
 	struct Fd* oldfd,*newfd;
 	if ((r = fd_lookup(oldfdnum,&oldfd)) < 0) {
 		return r;
@@ -91,15 +95,12 @@ int dup(int oldfdnum,int newfdnum) {
 	newfd = (struct Fd*)INDEX2FD(newfdnum);
 	ova = fd2data(oldfd);
 	nva = fd2data(newfd);
-	ecall_check_address(ova,&pde1,&pte1);
 	//NOTICE
-	if (pde1  != 0) {
+	if (vpd[PDX(ova)]) {
 		for (i = 0; i < PDMAP; i += BY2PG) {
-			pte1 = 0;
-			pde1 = 0;
-			ecall_check_address((ova + i),&pde1,&pte1);
-			if (pte1 & PTE_V) {
-				if ((r = ecall_mem_map(0,(void*)(ova + i),0,(void*)(nva + i),((pte1 & (PTE_D | PTE_LIBRARY | PTE_R | PTE_W | PTE_U | PTE_DIRTY))))) < 0) {
+			pte = vpt[VPN(ova + i)];
+			if (pte & PTE_V) {
+				if ((r = ecall_mem_map(0,(void*)(ova + i),0,(void*)(nva + i),((pte & (PTE_LIBRARY | PTE_R | PTE_W | PTE_U | PTE_DIRTY))))) < 0) {
 				//	debugf("r is %d\n",r);
 					//debugf("srcva is %08x,ova + i is %08x\n",ova,ova + i);
 					goto err;	
@@ -108,9 +109,7 @@ int dup(int oldfdnum,int newfdnum) {
 		}
 
 	}
-	pte1 = 0;
-	ecall_check_address(oldfd,0,&pte1);
-	if ((r = ecall_mem_map(0,oldfd,0,newfd,((pte1 & (PTE_D | PTE_LIBRARY | PTE_R | PTE_W | PTE_U | PTE_DIRTY))))) < 0) {
+	if ((r = ecall_mem_map(0,oldfd,0,newfd,((vpt[VPN(oldfd)] & (PTE_LIBRARY | PTE_R | PTE_W | PTE_U | PTE_DIRTY))))) < 0) {
 		debugf("faaaaaaaaaaaabbb\n");
 		goto err;
 	}

@@ -18,7 +18,7 @@ int init_stack(u_int child, char**argv,u_int* init_sp) {
 	}
 	strings = (char*)(UTEMP + BY2PG) -tot;
 	args = (u_int*)(UTEMP + BY2PG - ROUND(tot,4) - 4 * (argc + 1));
-	if ((r = ecall_mem_alloc(0,(void*)UTEMP,PTE_D | PTE_R | PTE_W | PTE_U)) < 0) {
+	if ((r = ecall_mem_alloc(0,(void*)UTEMP,PTE_R | PTE_W | PTE_U)) < 0) {
 		return r;
 	}
 	char *ctemp,*argv_temp;
@@ -47,7 +47,7 @@ int init_stack(u_int child, char**argv,u_int* init_sp) {
 	--pargv_ptr;
 	*pargv_ptr = argc;
 	*init_sp = USTACKTOP - UTEMP - BY2PG + (u_int)pargv_ptr;
-	if ((r = ecall_mem_map(0,(void*)UTEMP,child,(void*)(USTACKTOP - BY2PG),PTE_D | PTE_R | PTE_W | PTE_U)) < 0) {
+	if ((r = ecall_mem_map(0,(void*)UTEMP,child,(void*)(USTACKTOP - BY2PG),PTE_R | PTE_W | PTE_U)) < 0) {
 		goto error;
 	}
 	if ((r = ecall_mem_unmap(0,(void*)UTEMP)) < 0) {
@@ -63,7 +63,7 @@ static int spawn_mapper(void* data, u_long va, size_t offset, u_int perm, const 
 	u_int child_id = *(u_int*)data;
 	try(ecall_mem_alloc(child_id,(void*)va,perm));
 	if (src != NULL) {
-		int r = ecall_mem_map(child_id,(void*)va, 0,(void*)UTEMP,PTE_D | perm);
+		int r = ecall_mem_map(child_id,(void*)va, 0,(void*)UTEMP,perm);
 
 		if (r) {
 			ecall_mem_unmap(child_id,(void*)va);
@@ -125,17 +125,13 @@ int spawn(char* prog, char** argv) {
 	if ((r = ecall_set_trapframe(child,&tf)) != 0) {
 		goto err2;
 	}
-	Pde* cpgdir;
-	Pte* pte1;
-	ecall_get_pgdir(&cpgdir);
 	for (u_int pdeno = 0; pdeno <= PDX(USTACKTOP);++pdeno) {
-		if (!(cpgdir[pdeno] & PTE_V)) {
+		if (!(vpd[pdeno] & PTE_V)) {
 			continue;
 		}
 		for (u_int pteno = 0; pteno <= PTX(~0); ++pteno) {
-			pte1 = (Pde*)((cpgdir[pdeno] >> 10) << 12);
 			u_int pn = (pdeno << 10) + pteno;
-			u_int perm = pte1[pteno] & ((0x3 << 30) | ((1 << 10) - 1));
+			u_int perm = vpt[pn] & 0xc00003ff;
 			if ((perm & PTE_V) && (perm & PTE_LIBRARY)) {
 				void* va = (void*)(pn << PGSHIFT);
 				if ((r = ecall_mem_map(0,va,child,va,perm)) < 0) {
@@ -153,6 +149,7 @@ int spawn(char* prog, char** argv) {
 	return child;
 err2:
 	ecall_env_destroy(child);
+	return r;
 err1:
 	ecall_env_destroy(child);
 err:

@@ -12,10 +12,34 @@ int doOepn(int f, char*buf) {
 
 int main(int argc,char**argv) {
 	//int r;
-	struct Stat st;
-	int fd = open("/motd",O_RDWR);
-	write(fd,argv[1],strlen(argv[1]));
-	close(fd);
+	printf("I love os\n");
+	printf("I love os\n");
+	printf("I love os\n");
+	printf("I love os\n");
+	printf("I love os\n");
+	printf("I love os\n");
+	printf("I love os\n");
+	printf("I love os\n");
+	printf("I love os\n");
+	printf("I love os\n");
+	printf("I love os\n");
+	printf("I love os\n");
+	printf("I love os\n");
+	printf("I love os\n");
+	printf("I love os\n");
+	printf("I love os\n");
+	printf("I love os\n");
+	printf("I love os\n");
+	printf("I love os\n");
+	printf("I love os\n");
+	printf("I love os\n");
+	printf("I love os\n");
+	printf("I love os\n");
+	printf("I love os\n");
+	//struct Stat st;
+	//int fd = open("/motd",O_RDWR);
+	//write(fd,argv[1],strlen(argv[1]));
+	//close(fd);
 	/*
 	if ((r = stat("/motd",&st)) < 0) {
 		user_panic("ffff\n");

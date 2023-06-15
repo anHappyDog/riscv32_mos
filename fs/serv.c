@@ -32,22 +32,22 @@ void serve_init(void) {
 
 
 
-int open_alloc(u_int envid,struct Open** o) {
+int open_alloc(struct Open** o) {
 	int i,r;
 	for (i = 0; i < MAXOPEN; ++i) {
+	//			debugf("open_alloc o is %08x,pageref[i] is %08x\n",i,(pageref(opentab[i].o_ff)));
 		switch(pageref(opentab[i].o_ff)) {
 			case 0:
-				if ((r = ecall_mem_alloc(0,opentab[i].o_ff,PTE_G | PTE_R | PTE_W | PTE_U | PTE_D | PTE_LIBRARY)) < 0) {
+				if ((r = ecall_mem_alloc(0,opentab[i].o_ff, PTE_R | PTE_W | PTE_U | PTE_LIBRARY)) < 0) {
 					return r;
 				}
-			/*default:
-				if ((r = ecall_mem_map(0,opentab[i].o_ff,envid,opentab[i].o_ff,PTE_G | PTE_R | PTE_W | PTE_U | PTE_D | PTE_LIBRARY) < 0)) {
-					return r;		
-				}*/
+	//			debugf("after alloc, the open alloc o is %08x, pageref[i] is %08x\n",i,(pageref(opentab[i].o_ff)));
 			case 1:
 				opentab[i].o_fileid += MAXOPEN;
 				*o = &opentab[i];
 				memset((void*)opentab[i].o_ff,0,BY2PG);
+	//			debugf("selected open_alloc o is %08x,pageref[i] is %08x\n",i,(pageref(opentab[i].o_ff)));
+			//	debugf("open alloc is %08x\n",i);
 				return (*o)->o_fileid;
 		}
 	}
@@ -58,6 +58,7 @@ int open_lookup(u_int envid, u_int fileid, struct Open** po) {
 	struct Open *o;
 	o = &opentab[fileid % MAXOPEN];
 	if (pageref(o->o_ff) == 1 || o->o_fileid != fileid) {
+	//	debugf("o->fileid is %08x,while the fileid is %08x\n",o->o_fileid,fileid);
 		return -E_INVAL;
 	}
 	*po = o;
@@ -70,7 +71,7 @@ void serve_open(u_int envid, struct Fsreq_open* rq) {
 	struct Filefd* ff;
 	int r;
 	struct Open *o;
-	if ((r = open_alloc(envid,&o)) < 0) {
+	if ((r = open_alloc(&o)) < 0) {
 		ipc_send(envid,r,0,0);
 	}
 	if ((r = file_open(rq->req_path,&f)) < 0) {
@@ -84,7 +85,7 @@ void serve_open(u_int envid, struct Fsreq_open* rq) {
 	o->o_mode = rq->req_omode;
 	ff->f_fd.fd_omode = o->o_mode;
 	ff->f_fd.fd_dev_id = devfile.dev_id;
-	ipc_send(envid,0,o->o_ff,PTE_R | PTE_W | PTE_U | PTE_G | PTE_D | PTE_LIBRARY);
+	ipc_send(envid,0,o->o_ff,PTE_R | PTE_W | PTE_U |  PTE_LIBRARY);
 }
 
 void serve_map(u_int envid, struct Fsreq_map* rq) {
@@ -101,7 +102,7 @@ void serve_map(u_int envid, struct Fsreq_map* rq) {
 		ipc_send(envid,r,0,0);
 		return;
 	}
-	ipc_send(envid,0,blk,PTE_R | PTE_W | PTE_U | PTE_G | PTE_D | PTE_LIBRARY);
+	ipc_send(envid,0,blk,PTE_R | PTE_W | PTE_U | PTE_LIBRARY);
 }
 
 void serve_set_size(u_int envid, struct Fsreq_set_size* rq) {

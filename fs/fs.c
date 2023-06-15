@@ -3,7 +3,6 @@
 #include <drivers/virtio_disk.h>
 
 
-volatile Pde* fs_pgdir;
 
 struct Super* super;
 uint32_t* bitmap;
@@ -21,7 +20,7 @@ void* diskaddr(u_int blockno) {
 
 int va_is_mapped(void* va) {
 	//	return () ;
-	return ecall_check_address(va,0,0) == 0 ? 1 : 0;
+	return (vpd[PDX(va)] & PTE_V) && (vpt[VPN(va)] & PTE_V);
 }
 
 void* block_is_mapped(u_int blockno) {
@@ -34,7 +33,7 @@ void* block_is_mapped(u_int blockno) {
 
 int va_is_dirty(void *va) {
 	// is there anything wrong that PTE_DIRTY?
-	return GET_VPT(fs_pgdir,va) & PTE_DIRTY;
+	return vpt[VPN(va)] & PTE_DIRTY;
 }
 
 int read_block(u_int blockno, void** blk, u_int *isnew) {
@@ -207,9 +206,6 @@ void check_write_block(void) {
 
 
 void fs_init(void) {
-	if(ecall_get_pgdir((Pde**)&fs_pgdir) != 0) {
-		user_panic("fs_init get fs_pgdir failed!\n");
-	}
 	read_super();
 	check_write_block();
 	read_bitmap();
