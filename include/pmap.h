@@ -67,6 +67,7 @@ void *alloc(u_int n, u_int align, int clear);
 
 int pgdir_init();
 
+int pgdir_init_fill(Pde* pgdir,u_long va,u_long pa,u_long perm); 
 int page_alloc(struct Page **pp);
 void page_free(struct Page *pp);
 void page_decref(struct Page *pp);

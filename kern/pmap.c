@@ -17,7 +17,7 @@ struct Page_list page_free_list;
 
 void riscv32_detect_memory() {
 //	memsize = csr_read(CSR_HGATP); 
-	memsize =  64 * 1024 * 1024;
+	memsize =  128 * 1024 * 1024;
 	npage = memsize / BY2PG ;
 	printk("Memory size: %lu bytes, number of pages: %lu\n",memsize,npage);
 }
@@ -41,7 +41,7 @@ void* alloc(u_int n ,u_int align, int clear) {
 void page_init() {
 
 	pages = (struct Page*)alloc(npage * sizeof(struct Page),BY2PG,1);
-	
+		
 	LIST_INIT(&page_free_list);
 	freemem = ROUND(freemem,BY2PG);
 	for (int i = 0; i < npage; ++i) {
@@ -53,9 +53,9 @@ void page_init() {
 			LIST_INSERT_HEAD(&page_free_list,&pages[i],pp_link);
 		}
 	}
-	printk("------------------------------------------------------------\n");
-	printk("to memory %x for struct Pages.\n",freemem);
-	printk("page_init success\n");
+	//printk("------------------------------------------------------------\n");
+	//printk("to memory %x for struct Pages.\n",freemem);
+	//printk("page_init success\n");
 
 
 }
@@ -104,6 +104,8 @@ int page_alloc(struct Page** new) {
 	}
 	pp = LIST_FIRST(&page_free_list);
 	LIST_REMOVE(pp,pp_link);
+	//printk("pp->pp_ref is %08x\n",pp->pp_ref);
+	//pp->pp_ref = 0;
 	memset((void*)page2addr(pp),0,BY2PG);
 	*new = pp;
 	return 0;
@@ -134,19 +136,20 @@ void page_remove(Pde* pgdir, u_int asid, u_long va) {
 }
 
 
-static int pgdir_init_fill(Pde* pgdir,u_long va,struct Page* p,u_long perm) {
+int pgdir_init_fill(Pde* pgdir,u_long va,u_long pa,u_long perm) {
 	Pde* pgdir_entryp;
 	Pte* pte;
 	struct Page* pp;
+	//LIST_REMOVE(p,pp_link);
 	pgdir_entryp = pgdir + PDX(va);
 	if (!((*pgdir_entryp) & PTE_V)) {
 		try(page_alloc(&pp));
 		*pgdir_entryp = page2ptx(pp) | PTE_V;
 		pp->pp_ref += 1;
+		pgdir_init_fill(pgdir,page2addr(pp),page2addr(pp),PTE_R | PTE_W);
 	}
-	
 	pte = (Pte*)PADDR(PTE_ADDR(*pgdir_entryp)) + PTX(va);
-	*pte = page2ptx(p) | PTE_V | perm;
+	*pte = ((pa >> 12) << 10) | PTE_V | perm;
 	return 0;
 }
 
@@ -161,8 +164,10 @@ static int pgdir_walk(Pde* pgdir, u_long va, int create, Pte** ppte) {
 			if (page_alloc(&pp) == -E_NO_MEM) {
 				return -E_NO_MEM;
 			}
-			*pgdir_entryp = page2ptx(pp) | PTE_V;
+			*pgdir_entryp = page2ptx(pp) |  PTE_V;
 			pp->pp_ref += 1;
+			pgdir_init_fill(pgdir,page2addr(pp),page2addr(pp),PTE_W | PTE_R);
+			//	page_insert(pgdir,curenv->env_asid,pp,page2addr(pp), PTE_R | PTE_W);
 		}
 		else {
 			*ppte = 0;
@@ -231,17 +236,17 @@ int pgdir_init() {
 		++cnt;
 	}*/
 	extern struct Env envs[NENV];
-	for (u_long addr = KERNSTART; addr < (u_long)envs; addr += BY2PG) {
- 		try(pgdir_init_fill(pgdir,addr,addr2page(addr),PTE_R | PTE_X | PTE_W ));
+	for (u_long addr = KERNSTART; addr < ROUNDDOWN((u_long)envs,BY2PG); addr += BY2PG) {
+ 		try(pgdir_init_fill(pgdir,addr,addr,PTE_R | PTE_X));
 	}
-	for (u_long addr = (u_long)envs; addr < KERNEND; addr += BY2PG) {
-		try(pgdir_init_fill(pgdir,addr,addr2page(addr),PTE_R | PTE_W));
+	for (u_long addr = ROUNDDOWN((u_long)envs,BY2PG); addr < KERNEND; addr += BY2PG) {
+		try(pgdir_init_fill(pgdir,addr,addr,PTE_R | PTE_W));
 	}
-	for (u_long addr = KERNEND; addr < (u_long)pages; addr += BY2PG) {
-		try(pgdir_init_fill(pgdir,addr,addr2page(addr),PTE_R | PTE_X));
+	for (u_long addr = KERNEND; addr < ROUNDDOWN((u_long)pages,BY2PG); addr += BY2PG) {
+		try(pgdir_init_fill(pgdir,addr,addr,PTE_R | PTE_X));
 	}
-	for (u_long addr = (u_long)pages; addr <=page2addr(&pages[npage - 1]); addr += BY2PG) {
-		try(pgdir_init_fill(pgdir,addr,addr2page(addr),PTE_R | PTE_W));
+	for (u_long addr = ROUNDDOWN((u_long)pages,BY2PG); addr < 0X88000000; addr += BY2PG) {
+		try(pgdir_init_fill(pgdir,addr,addr,PTE_R | PTE_W));
 	}
 	try(pgdir_map(pgdir,0,DISK_ADDRESS - KERNSTART,DISK_ADDRESS,PTE_R | PTE_W));
 	//try(pgdir_init_fill(pgdir,DEV_DISK_REGADDRESS,,PTE_R | PTR_W);
@@ -249,11 +254,11 @@ int pgdir_init() {
 	root_pgdir = pgdir;
 	SET_SATP(1,0,((unsigned long)pgdir));	
 	SET_TLB_FLUSH(0,0,1);
-	printk("------------------------------------------------------------------\n");
+	/*printk("------------------------------------------------------------------\n");
 	printk("root pgdir address is 0x%08x\n",pgdir);
 	printk("pgdir_init :   pgdir_init successfulls!\n");	
 	printk("------------------------------------------------------------------\n");
-	return 0;
+	*/return 0;
 }
 
 

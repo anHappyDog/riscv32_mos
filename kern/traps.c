@@ -34,9 +34,9 @@ void (*exception_handlers[32])(void) = {
 	[13] = handle_load_page,
 	[15] = handle_store_page,
 	/*	[0] = handle_int,
-	[1] = handle_tlb,
-	[2 ... 3] = handle_tlb,
-	[8] = handle_sys,*/
+		[1] = handle_tlb,
+		[2 ... 3] = handle_tlb,
+		[8] = handle_sys,*/
 };
 
 void do_load_page(struct Trapframe* tf) {
@@ -46,12 +46,11 @@ void do_load_page(struct Trapframe* tf) {
 		panic("load page : alloc failed!\n");
 	}
 	/*if (page_alloc(&pp) != 0) {
-		panic("alloc page failed!\n");
-	}*/
+	  panic("alloc page failed!\n");
+	  }*/
 	if (page_insert(curenv->env_pgdir,curenv->env_asid,pp,ROUNDDOWN(tf->stval,BY2PG),*pte1 | PTE_R | PTE_U) != 0) {
 		panic("insert page failed!\n");
 	}
-//	printk("load page process well!\n");
 }
 
 
@@ -64,9 +63,9 @@ void do_software_int(struct Trapframe* tf) {
 void do_ecall_from_u(struct Trapframe* tf) {
 	int (*func)(u_int, u_int, u_int, u_int, u_int);
 	int eno = tf->regs[10];
-    if (eno < 0 || eno >= MAX_ENO) {
-   		tf->regs[1] = -E_NO_E;
-    	return;
+	if (eno < 0 || eno >= MAX_ENO) {
+		tf->regs[1] = -E_NO_E;
+		return;
 	}	  
 	tf->sepc += 4;
 	func = ecall_table[eno];
@@ -80,46 +79,41 @@ void do_ecall_from_u(struct Trapframe* tf) {
 
 
 void do_store_page(struct Trapframe* tf) {
-	Pte* pte1;
+	Pte* pte1 = NULL;
 	struct Page* pp = page_lookup(cur_pgdir,tf->stval,&pte1);
-	//printk("curenv is %08x,st->stval is %08x\n",curenv->env_id,tf->stval);
-	if ((*pte1 & PTE_COW) == PTE_COW) {
-	//	printk("aaaaaaaaaaaaaaaaaa\n");
-		*((struct Trapframe*)UXSTACKTOP - 1) = *tf;
+	if (pte1 && *pte1 & PTE_V) { 
+		if ((*pte1 & PTE_COW) == PTE_COW) {
+			*((struct Trapframe*)UXSTACKTOP - 1) = *tf;
 
-		if (tf->regs[2] < USTACKTOP || tf->regs[2] >= UXSTACKTOP) {
-			tf->regs[2] = UXSTACKTOP;
-		}
-		tf->regs[2] -= 2 * sizeof(struct Trapframe);
-	    *(struct Trapframe*)tf->regs[2] = *tf;
-	
-		if(curenv->env_cow_entry) {
-			tf->regs[10] = tf->regs[2];
-			//tf->regs[2] -= sizeof(tf->regs[10]);	
-			tf->sepc = curenv->env_cow_entry;	
-		//	env_pop_tf(tf);
+			if (tf->regs[2] < USTACKTOP || tf->regs[2] >= UXSTACKTOP) {
+				tf->regs[2] = UXSTACKTOP;
+			}
+			tf->regs[2] -= 2 * sizeof(struct Trapframe);
+			*(struct Trapframe*)tf->regs[2] = *tf;
+
+			if(curenv->env_cow_entry) {
+				tf->regs[10] = tf->regs[2];
+				tf->sepc = curenv->env_cow_entry;	
+			}
+			else {
+				panic("COW doesn't have cow_entry!\n");
+			}
 		}
 		else {
-			panic("COW doesn't have cow_entry!\n");
+			if (page_insert(curenv->env_pgdir,curenv->env_asid,pp,ROUNDDOWN(tf->stval,BY2PG),*pte1 | PTE_W) != 0) {
+				panic("ccccccccccccccccccc do _store");
+			}
 		}
-	}
-	else {
-	//	print_tf(tf);
-	//	panic("do_store_page doesn't have pte_cow\n");
-	//	printk("---:%08x\n",tf->stval);
-		if (page_insert(curenv->env_pgdir,curenv->env_asid,pp,ROUNDDOWN(tf->stval,BY2PG),*pte1 | PTE_W | PTE_U) != 0) {
-			panic("ccccccccccccccccccc do _store");
+
+
+	} else {
+		if (page_alloc(&pp) != 0) {
+			panic("alloc page failed!\n");
 		}
-	}
-	/*
-	if (page_alloc(&pp) != 0) {
-		panic("alloc page failed!\n");
-	}
-	if (page_insert(curenv->env_pgdir,curenv->env_asid,pp,ROUNDDOWN(tf->stval,BY2PG),PTE_R | PTE_W | PTE_U) != 0) {
-		panic("insert page failed!\n");
-	}
-	*/
-//	printk("store page fault process well!\n");
+		if (page_insert(curenv->env_pgdir,curenv->env_asid,pp,ROUNDDOWN(tf->stval,BY2PG),PTE_R | PTE_W | PTE_U) != 0) {
+			panic("insert page failed!\n");
+		}
+	}	
 }
 
 void do_instruction_page(struct Trapframe* tf) {
@@ -135,12 +129,12 @@ void do_timer_int(struct Trapframe* tf) {
 	//printk("ok!\n");	
 	//printk("ExcCode is %08x\n",tf->scause);
 	/*printk("go to schedule ....\n");
-	++kick;
-	if (kick == 20) {
-		panic("tick finish, tick is %d!\n",kick);
-		
-	}*/
-//	printk("---%d\n",RD_TIME());	
+	  ++kick;
+	  if (kick == 20) {
+	  panic("tick finish, tick is %d!\n",kick);
+
+	  }*/
+	//	printk("---%d\n",RD_TIME());	
 	SBI_TIMER(200000 + RD_TIME());
 	//printk("%d : ",kick);
 	schedule(0);

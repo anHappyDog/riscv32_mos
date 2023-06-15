@@ -47,7 +47,7 @@ static void map_segment(Pde* pgdir, u_int asid, u_long pa, u_long va, u_int size
 	assert(pa % BY2PG == 0);
 	assert(va % BY2PG == 0);
 	assert(size % BY2PG == 0);
-	
+
 	for (int i = 0; i < size; i += BY2PG) {
 		struct Page* pp = addr2page(pa + i);
 		page_insert(pgdir,asid,pp,va +i,perm);
@@ -87,7 +87,7 @@ int envid2env(u_int envid, struct Env** penv, int checkperm) {
 		if (e != curenv && e->env_parent_id != curenv->env_id) {
 			return -E_BAD_ENV;
 		}
-	
+
 	}
 	*penv = e;
 	return 0;
@@ -103,13 +103,14 @@ void env_init(void) {
 	printk("env_init : interrupt entry set at 0x%08x, mode is %d\n",KERNEND,0);
 	printk("env_init : timer interrupt in on !\n");
 	printk("---------------------------------------------------------------\n");
-	
+
 	LIST_INIT(&env_free_list);
 	TAILQ_INIT(&env_sched_list);
 	for (int i = NENV - 1; i >= 0; --i) {
 		envs[i].env_status = ENV_FREE;
 		LIST_INSERT_HEAD(&env_free_list,&envs[i],env_link);
 	}
+	u_int addr;
 	struct Page* p;
 	panic_on(page_alloc(&p));	
 	//page_insert((Pde*)(0x83fff000),0,p,page2addr(p),PTE_R | PTE_W);
@@ -117,20 +118,27 @@ void env_init(void) {
 	base_pgdir = (Pde*)page2addr(p);
 	//panic("-----%08x\n",ROUND((u_long)pages - 0x80200000,BY2PG));
 	//panic("------envs : %08x    pages : %08x\n",envs,pages);
-	//map_segment(base_pgdir,0,KERNSTART,KERNSTART,ROUND(0x4000000,BY2PG),PTE_G |  PTE_R | PTE_W  |PTE_X);	
-	map_segment(base_pgdir,0,KERNSTART,KERNSTART,ROUND((u_long)envs - KERNSTART,BY2PG),PTE_G | PTE_R | PTE_X);
-	map_segment(base_pgdir,0,KERNEND,KERNEND,ROUND((u_long)pages - KERNEND,BY2PG),PTE_G | PTE_R | PTE_X);
-	map_segment(base_pgdir,0,(u_long)envs,(u_long)envs,ROUND(KERNEND - (u_long)envs,BY2PG),PTE_R | PTE_W);
-	map_segment(base_pgdir,0,(u_long)pages,(u_long)pages,ROUND(0x84000000 - (u_long)pages,BY2PG), PTE_R | PTE_W);
-	//map_segment(base_pgdir,0,(u_long)pages,(u_long)pages,ROUND(0x84000000 - (u_long)pages,BY2PG),PTE_R | PTE_W);
+
+	pgdir_init_fill(base_pgdir,base_pgdir,base_pgdir,PTE_G | PTE_R | PTE_W);	
+	for (addr = KERNSTART;addr < ROUNDDOWN((u_long)envs,BY2PG);addr += BY2PG) {
+		pgdir_init_fill(base_pgdir,addr,addr,PTE_G | PTE_R | PTE_X);
+	}
+	for (addr = ROUNDDOWN((u_long)envs,BY2PG);addr < KERNEND;addr += BY2PG) {
+		pgdir_init_fill(base_pgdir,addr,addr,PTE_G | PTE_R | PTE_W);
+	}
+	for (addr = KERNEND;addr < ROUNDDOWN((u_long)pages,BY2PG);addr += BY2PG) {
+		pgdir_init_fill(base_pgdir,addr,addr,PTE_G | PTE_R | PTE_X);
+	}
+	for (addr = ROUNDDOWN((u_long)pages,BY2PG);addr < 0X88000000;addr += BY2PG) {
+		pgdir_init_fill(base_pgdir,addr,addr,PTE_G | PTE_R | PTE_W);
+	}
+	pgdir_init_fill(base_pgdir,(u_long)disk,(u_long)disk,PTE_G | PTE_R | PTE_W);
+	pgdir_init_fill(base_pgdir,(u_long)disk->desc,(u_long)disk->desc,PTE_G | PTE_R | PTE_W);
+	pgdir_init_fill(base_pgdir,(u_long)disk->avail,(u_long)disk->avail,PTE_G | PTE_R | PTE_W);
+	pgdir_init_fill(base_pgdir,(u_long)disk->used,(u_long)disk->used,PTE_G | PTE_R | PTE_W);
+	
 	map_segment(base_pgdir,0,(u_long)pages,UPAGES,ROUND(npage * sizeof(struct Page),BY2PG),PTE_G |  PTE_R | PTE_U);
 	map_segment(base_pgdir,0,(u_long)envs,UENVS,ROUND(NENV * sizeof(struct Env),BY2PG), PTE_G | PTE_R | PTE_U);
-	//map_segment(base_pgdir,0,DEV_DISK_REGADDRESS,DEV_DISK_REGADDRESS,BY2PG,PTE_R | PTE_W | PTE_G | PTE_LIBRARY);	
-	map_segment(base_pgdir,0,(u_long)disk,(u_long)disk,BY2PG,PTE_G | PTE_R | PTE_W | PTE_LIBRARY);
-	map_segment(base_pgdir,0,(u_long)disk->desc,(u_long)disk->desc,BY2PG,PTE_G | PTE_R | PTE_W | PTE_LIBRARY);
-	map_segment(base_pgdir,0,(u_long)disk->avail,(u_long)disk->avail,BY2PG,PTE_G | PTE_R | PTE_W | PTE_LIBRARY);
-	map_segment(base_pgdir,0,(u_long)disk->used,(u_long)disk->used,BY2PG,PTE_G | PTE_R | PTE_W | PTE_LIBRARY);
-	
 	pgdir_map(base_pgdir,0,DISK_ADDRESS - KERNSTART ,DISK_ADDRESS,PTE_R | PTE_W | PTE_G | PTE_LIBRARY);
 	printk("envs's address is 0x%08x\n",envs);
 	printk("env_init : envs int finished !\n");
@@ -150,13 +158,13 @@ static int env_setup_vm(struct Env* e) {
 		page_insert(e->env_pgdir,e->env_asid,p,UXSTACKTOP - (i + 1) * BY2PG,PTE_U | PTE_W | PTE_R);
 	}
 	/*
-	map_segment(e->env_pgdir,e->env_asid,(u_long)(e->env_pgdir),(u_long)(e->env_pgdir),BY2PG,PTE_U | PTE_R | PTE_W);
-	for (int i = 0; i < 1024; ++i) {
-		if (e->env_pgdir[i] & PTE_V) {
-			addr = PADDR(PTE_ADDR(e->env_pgdir[i]));
-			map_segment(e->env_pgdir,e->env_asid,addr,addr,BY2PG, PTE_U | PTE_R | PTE_W);
-		}
-	}*/
+	   map_segment(e->env_pgdir,e->env_asid,(u_long)(e->env_pgdir),(u_long)(e->env_pgdir),BY2PG,PTE_U | PTE_R | PTE_W);
+	   for (int i = 0; i < 1024; ++i) {
+	   if (e->env_pgdir[i] & PTE_V) {
+	   addr = PADDR(PTE_ADDR(e->env_pgdir[i]));
+	   map_segment(e->env_pgdir,e->env_asid,addr,addr,BY2PG, PTE_U | PTE_R | PTE_W);
+	   }
+	   }*/
 	return 0;
 
 }
@@ -170,7 +178,7 @@ int env_alloc(struct Env** new, u_int parent_id) {
 	try(env_setup_vm(e));
 	e->env_cow_entry = 0;
 	e->env_runs = 0;
-	
+
 	e->env_id = mkenvid(e);
 	try(asid_alloc(&(e->env_asid)));
 	e->env_parent_id = parent_id;
@@ -178,7 +186,7 @@ int env_alloc(struct Env** new, u_int parent_id) {
 	e->env_tf.sstatus = ((1 << 1)|(1 << 18));
 	//give space for argc and argv
 	e->env_tf.regs[2] = USTACKTOP - sizeof(int) - sizeof(char**); 
-		
+
 	LIST_REMOVE(e,env_link);
 	*new = e;
 	return 0;
@@ -251,7 +259,7 @@ void env_free(struct Env* e) {
 			SET_TLB_FLUSH(UVPT + (pdeno << PGSHIFT),e->env_asid,0);
 		}
 	}
-	
+
 	page_decref(addr2page((u_long)(e->env_pgdir)));	
 	asid_free(e->env_asid);
 	SET_TLB_FLUSH(UVPT + (PDX(UVPT) << PGSHIFT),e->env_asid,0);
@@ -275,7 +283,7 @@ extern void env_pop_tf(struct Trapframe* tf) __attribute__((noreturn));
 
 void env_run(struct Env* e) {
 	assert(e->env_status == ENV_RUNNABLE);
-	
+
 	if(curenv) {
 		curenv->env_tf = *((struct Trapframe*)RD_SSCRATCH());
 	}
@@ -284,7 +292,7 @@ void env_run(struct Env* e) {
 	cur_pgdir = curenv->env_pgdir;
 	//printk("%08x  --- \n",curenv->env_id);
 	//Pte* t1;
- 	//struct Page* ppp1 =  page_lookup(cur_pgdir,0x4000000,&t1);	
+	//struct Page* ppp1 =  page_lookup(cur_pgdir,0x4000000,&t1);	
 	//printk("----%08x\n",*((u_int*)page2addr(ppp1)));
 	//panic("test for 0x4000000,----\n");
 	SET_TLB_FLUSH(0,curenv->env_asid,1);
