@@ -127,7 +127,7 @@ int runcmd(char* s) {
 	}
 	argv[argc] = 0;
 	int child = spawn(argv[0],argv);
-	//close_all();
+	close_all();
 	if (child >= 0) {
 		wait(child);
 	} else {

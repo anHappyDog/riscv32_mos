@@ -118,24 +118,29 @@ void env_init(void) {
 	base_pgdir = (Pde*)page2addr(p);
 	//panic("-----%08x\n",ROUND((u_long)pages - 0x80200000,BY2PG));
 	//panic("------envs : %08x    pages : %08x\n",envs,pages);
-	pgdir_init_fill(base_pgdir,(u_long)base_pgdir,(u_long)base_pgdir,PTE_G | PTE_R | PTE_W);	
+	//pgdir_init_fill(base_pgdir,(u_long)base_pgdir,(u_long)base_pgdir,PTE_G | PTE_R | PTE_W);	
+	//map_segment(base_pgdir,0,(u_long)base_pgdir,(u_long)base_pgdir,BY2PG,PTE_R | PTE_W);
 	for (addr = KERNSTART;addr < ROUNDDOWN((u_long)envs,BY2PG);addr += BY2PG) {
 		pgdir_init_fill(base_pgdir,addr,addr,PTE_G | PTE_R | PTE_X);
 	}
+	//map_segment(base_pgdir,0,KERNSTART,KERNSTART,ROUNDDOWN((u_long)envs - KERNSTART,BY2PG),PTE_R | PTE_X | PTE_G);
 	for (addr = ROUNDDOWN((u_long)envs,BY2PG);addr < KERNEND;addr += BY2PG) {
 		pgdir_init_fill(base_pgdir,addr,addr,PTE_G | PTE_R | PTE_W);
 	}
+	//map_segment(base_pgdir,0,(u_long)envs,(u_long)envs,ROUND(NENV * sizeof(struct Env),BY2PG),PTE_R | PTE_W | PTE_G);
 	for (addr = KERNEND;addr < ROUNDDOWN((u_long)pages,BY2PG);addr += BY2PG) {
 		pgdir_init_fill(base_pgdir,addr,addr,PTE_G | PTE_R | PTE_X);
 	}
-
-	map_segment(base_pgdir,0,(u_long)pages,(u_long)pages,ROUND(npage * sizeof(struct Page),BY2PG),PTE_G | PTE_R | PTE_W);
-	/*for (addr = ROUNDDOWN((u_long)pages,BY2PG);addr < ROUND(pages + npage * sizeof(struct Page),BY2PG);addr += BY2PG) {
+	//map_segment(base_pgdir,0,KERNEND,KERNEND,ROUND((u_long)pages - KERNEND,BY2PG),PTE_R | PTE_X | PTE_G);
+	//map_segment(base_pgdir,0,(u_long)pages,(u_long)pages,ROUND(npage * sizeof(struct Page),BY2PG),PTE_G | PTE_R | PTE_W);
+	for (addr = ROUNDDOWN((u_long)pages,BY2PG);addr < ROUND(pages + npage * sizeof(struct Page),BY2PG);addr += BY2PG) {
 		pgdir_init_fill(base_pgdir,addr,addr,PTE_G | PTE_R | PTE_W);
-	}*/
+	}
+	
 	for (addr = ROUND(pages + npage * sizeof(struct Page),BY2PG);addr < 0X88000000; addr += BY2PG) {
 		pgdir_init_fill(base_pgdir,addr,addr,PTE_G | PTE_R | PTE_W);
 	} 
+	//map_segment(base_pgdir,0,ROUND((u_long)pages + npage * sizeof(struct Page),BY2PG),ROUND((u_long)pages + npage * sizeof(struct Page),BY2PG),ROUND(0X88000000 - ((u_long)pages + npage * sizeof(struct Page)),BY2PG ),PTE_R | PTE_W);
 
 	map_segment(base_pgdir,0,(u_long)disk,(u_long)disk,BY2PG,PTE_G | PTE_R | PTE_W);
 	map_segment(base_pgdir,0,(u_long)disk->desc,(u_long)disk->desc,BY2PG,PTE_G | PTE_R | PTE_W);
@@ -240,7 +245,10 @@ void env_free(struct Env* e) {
 	u_int pdeno,pteno,pa;
 	int flag = 0;
 	printk("[%08x] free env %08x \n",curenv?curenv->env_id:0,e->env_id);
-	for (pdeno = 0; pdeno < PDX(UTOP); ++pdeno) {
+	for (pdeno = 0; pdeno < PDX(~0); ++pdeno) {
+		if (pdeno >= PDX(UTOP) && pdeno < PDX(0X88000000)) {
+			continue;
+		}
 		flag = 0;
 		if (!(e->env_pgdir[pdeno] & PTE_V)) {
 			continue;
@@ -263,8 +271,8 @@ void env_free(struct Env* e) {
 			SET_TLB_FLUSH(UVPT + (pdeno << PGSHIFT),e->env_asid,0);
 		}
 	}
-
-	page_decref(addr2page((u_long)(e->env_pgdir)));	
+	
+	page_decref(addr2page((u_long)(e->env_pgdir)));
 	asid_free(e->env_asid);
 	SET_TLB_FLUSH(UVPT + (PDX(UVPT) << PGSHIFT),e->env_asid,0);
 	e->env_status = ENV_FREE;

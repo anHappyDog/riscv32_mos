@@ -9,6 +9,7 @@
 #define DISKMAX 0x40000000
 
 
+int file_create(char* path,struct File** file);
 int file_open(char* path, struct File** pfile);
 int file_get_block(struct File* f, u_int blockno,void** pblk);
 int file_set_size(struct File* f,u_int newsize);

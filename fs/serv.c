@@ -35,19 +35,19 @@ void serve_init(void) {
 int open_alloc(struct Open** o) {
 	int i,r;
 	for (i = 0; i < MAXOPEN; ++i) {
-	//			debugf("open_alloc o is %08x,pageref[i] is %08x\n",i,(pageref(opentab[i].o_ff)));
+		//			debugf("open_alloc o is %08x,pageref[i] is %08x\n",i,(pageref(opentab[i].o_ff)));
 		switch(pageref(opentab[i].o_ff)) {
 			case 0:
 				if ((r = ecall_mem_alloc(0,opentab[i].o_ff, PTE_R | PTE_W | PTE_U | PTE_LIBRARY)) < 0) {
 					return r;
 				}
-	//			debugf("after alloc, the open alloc o is %08x, pageref[i] is %08x\n",i,(pageref(opentab[i].o_ff)));
+				//			debugf("after alloc, the open alloc o is %08x, pageref[i] is %08x\n",i,(pageref(opentab[i].o_ff)));
 			case 1:
 				opentab[i].o_fileid += MAXOPEN;
 				*o = &opentab[i];
 				memset((void*)opentab[i].o_ff,0,BY2PG);
-	//			debugf("selected open_alloc o is %08x,pageref[i] is %08x\n",i,(pageref(opentab[i].o_ff)));
-			//	debugf("open alloc is %08x\n",i);
+				//			debugf("selected open_alloc o is %08x,pageref[i] is %08x\n",i,(pageref(opentab[i].o_ff)));
+				//	debugf("open alloc is %08x\n",i);
 				return (*o)->o_fileid;
 		}
 	}
@@ -58,7 +58,7 @@ int open_lookup(u_int envid, u_int fileid, struct Open** po) {
 	struct Open *o;
 	o = &opentab[fileid % MAXOPEN];
 	if (pageref(o->o_ff) == 1 || o->o_fileid != fileid) {
-	//	debugf("o->fileid is %08x,while the fileid is %08x\n",o->o_fileid,fileid);
+		//	debugf("o->fileid is %08x,while the fileid is %08x\n",o->o_fileid,fileid);
 		return -E_INVAL;
 	}
 	*po = o;
@@ -74,9 +74,22 @@ void serve_open(u_int envid, struct Fsreq_open* rq) {
 	if ((r = open_alloc(&o)) < 0) {
 		ipc_send(envid,r,0,0);
 	}
-	if ((r = file_open(rq->req_path,&f)) < 0) {
-		ipc_send(envid,r,0,0);
-		return;
+	if ((rq->req_omode & O_CREAT) == O_CREAT) {
+		if ((r = file_create(rq->req_path,&f)) < 0) {
+			ipc_send(envid,r,0,0);
+			return;
+		}
+	} else if ((rq->req_omode & O_MKDIR) == O_MKDIR) {
+		if ((r = file_create(rq->req_path,&f)) < 0) {
+			ipc_send(envid,r,0,0);
+			return;
+		}
+		f->f_type = FTYPE_DIR;
+	} else {
+		if ((r = file_open(rq->req_path,&f)) < 0) {
+			ipc_send(envid,r,0,0);
+			return;
+		}
 	}
 	o->o_file = f;
 	ff = (struct Filefd*)o->o_ff;

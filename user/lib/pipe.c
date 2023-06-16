@@ -69,7 +69,6 @@ static int _pipe_is_closed(struct Fd* fd, struct Pipe* p) {
 		fd_ref = pageref(fd);
 		pipe_ref = pageref(p);
 	} while(runs != env->env_runs);
-	//debugf("fd is %08x,fd0ref is %08x,piperef is %08x\n",fd2num(fd),fd_ref,pipe_ref);
 	return (fd_ref == pipe_ref);
 }
 
