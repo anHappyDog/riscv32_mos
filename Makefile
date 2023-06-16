@@ -16,7 +16,7 @@ targets                 := $(mos_elf) fs-image
 qemu32_gdb_flags 		+= -S -s
 qemu32_files            += $(mos_elf)
 qemu32 					+= qemu-system-riscv32
-qemu32_flags            += -m 128M -nographic -machine virt
+qemu32_flags            += -m 256M -nographic -machine virt
 disk_flags				:= -global virtio-mmio.force-legacy=false -drive file=$(user_disk),if=none,format=raw,id=hd -device virtio-blk-device,drive=hd
 
 objects                 := $(addsuffix /*.o, $(modules)) $(addsuffix /*.x, $(user_modules)) 

@@ -113,11 +113,8 @@ void env_init(void) {
 	u_int addr;
 	struct Page* p;
 	panic_on(page_alloc(&p));	
-	//page_insert((Pde*)(0x83fff000),0,p,page2addr(p),PTE_R | PTE_W);
 	p->pp_ref += 1;
 	base_pgdir = (Pde*)page2addr(p);
-	//panic("-----%08x\n",ROUND((u_long)pages - 0x80200000,BY2PG));
-	//panic("------envs : %08x    pages : %08x\n",envs,pages);
 	//pgdir_init_fill(base_pgdir,(u_long)base_pgdir,(u_long)base_pgdir,PTE_G | PTE_R | PTE_W);	
 	//map_segment(base_pgdir,0,(u_long)base_pgdir,(u_long)base_pgdir,BY2PG,PTE_R | PTE_W);
 	for (addr = KERNSTART;addr < ROUNDDOWN((u_long)envs,BY2PG);addr += BY2PG) {
@@ -137,7 +134,7 @@ void env_init(void) {
 		pgdir_init_fill(base_pgdir,addr,addr,PTE_G | PTE_R | PTE_W);
 	}
 	
-	for (addr = ROUND(pages + npage * sizeof(struct Page),BY2PG);addr < 0X88000000; addr += BY2PG) {
+	for (addr = ROUND(pages + npage * sizeof(struct Page),BY2PG);addr < MEMSIZE; addr += BY2PG) {
 		pgdir_init_fill(base_pgdir,addr,addr,PTE_G | PTE_R | PTE_W);
 	} 
 	//map_segment(base_pgdir,0,ROUND((u_long)pages + npage * sizeof(struct Page),BY2PG),ROUND((u_long)pages + npage * sizeof(struct Page),BY2PG),ROUND(0X88000000 - ((u_long)pages + npage * sizeof(struct Page)),BY2PG ),PTE_R | PTE_W);
@@ -246,7 +243,7 @@ void env_free(struct Env* e) {
 	int flag = 0;
 	printk("[%08x] free env %08x \n",curenv?curenv->env_id:0,e->env_id);
 	for (pdeno = 0; pdeno < PDX(~0); ++pdeno) {
-		if (pdeno >= PDX(UTOP) && pdeno < PDX(0X88000000)) {
+		if (pdeno >= PDX(UTOP) && pdeno < PDX(MEMSIZE)) {
 			continue;
 		}
 		flag = 0;
