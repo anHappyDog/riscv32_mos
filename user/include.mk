@@ -30,7 +30,8 @@ USERAPPS				:=  num.b		\
 							testpiperace.b \
 							testptelibrary.b	\
 							touch.b	\
-							test1.b
+							test1.b \
+							mkdir.b
 
 INITAPPS := icode.x  
 USERLIB :=	$(addprefix lib/, $(USERLIB)) $(wildcard ../lib/*.o)
