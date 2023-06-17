@@ -13,7 +13,7 @@ extern struct Env* curenv;
 
 int e_get_pgref(void*v)
 {
-	return addr2page(v)->pp_ref;
+	return addr2page((u_long)v)->pp_ref;
 
 }
 

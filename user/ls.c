@@ -73,7 +73,6 @@ int main(int argc, char** argv) {
 	}
 	ARGEND
 	if (argc == 0) {
-		int sp;
 		ls("/","");
 	} else {
 		for (i = 0; i < argc; ++i) {
