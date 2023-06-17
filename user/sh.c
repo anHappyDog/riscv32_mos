@@ -139,9 +139,118 @@ int runcmd(char* s) {
 	exit();
 }
 
-void readline(char* buf, u_int n) {
+/*
+static int ReadAcharForCmd(char* ch) {
+	char t;
 	int r;
-	for (int i = 0; i < n;++i) {
+	if ((r = read(0,&t,1)) != 1) {
+		return r;
+	}
+	if (t == 27) {
+		if ((r = read(0,&t,1)) != 1) {	
+			return r;
+		}
+		if (t == 91) {
+			if ((r = read(0,&t,1)) != 1) {	
+			return r;
+		}
+			if (t == CURSOR_RIGHT) {
+				t = CURSOR_FORMER_RIGHT;
+			} else if (t == CURSOR_LEFT) {
+				t = CURSOR_FORMER_LEFT;
+			} else if (t == CURSOR_UP) {
+				t = CURSOR_FORMER_UP;
+			} else if (t == CURSOR_DOWN) {
+				t = CURSOR_FORMER_DOWN;
+			}
+		}
+	} 
+	*ch = t;
+	return r;
+}
+*/
+
+
+static void moveCursor(int c) {
+	printf("%c%c%c",27,91,c);
+}
+
+static void deleteCharFromCmd(char*buf, int*curIndex, int*allIndex) {
+	if (*curIndex > 0) {
+		for (int i = *curIndex -1; i < *allIndex -1; ++i) {
+			buf[i] = buf[i + 1];
+		}
+		*allIndex -= 1;
+		*curIndex -= 1;
+		printf("\b");
+		write(0,buf + *curIndex,*allIndex - *curIndex);
+		printf(" ");
+		for (int i = *curIndex;i < *allIndex + 1; ++i) {
+			printf("\b");
+		}
+	}
+}
+
+static void AddCharToCmd(char* buf, char ch, int*curIndex,int* allIndex) {
+	for (int i = *allIndex; i > *curIndex; --i) {
+		buf[i] = buf[i - 1];
+	}
+	buf[*curIndex] = ch;
+	*curIndex += 1;
+	*allIndex += 1;
+	write(0,buf + *curIndex,*allIndex - *curIndex);
+	for (int i = *curIndex; i < *allIndex; ++i) {
+		printf("\b");
+	}
+}
+
+
+static void doWithDirection(signed char* buf,int *curCmdCnt,int* curIndex,int*allIndex) {
+	
+	switch(*buf) {
+		case CURSOR_FORMER_RIGHT:
+			if (*curIndex < *allIndex) {
+				moveCursor(CURSOR_RIGHT);
+				*curIndex += 1;
+			}
+			break;
+		case CURSOR_FORMER_LEFT:
+			if (*curIndex > 0) {
+				moveCursor(CURSOR_LEFT);
+				*curIndex -= 1;
+			}
+			break;
+		default:
+		break;	
+	}
+
+}
+
+void readline(char* buf, u_int n) {
+	int r,curIndex = 0,allIndex = 0,curCmdCnt = 0;
+	signed char ch;
+	for (allIndex = 0; allIndex < n;) {
+		if ((r = read(0,&ch,1)) != 1) {
+			if (r < 0) {
+				debugf("read error: %d\n",r);
+			}
+			exit();
+		}
+		if (ch < 0) {
+			doWithDirection(&ch,&curCmdCnt,&curIndex,&allIndex);
+		} else {
+			if (ch == '\b' || ch == 0x7f) {
+				deleteCharFromCmd(buf,&curIndex,&allIndex);
+			} else if (ch == '\r' || ch == '\n') {
+				buf[allIndex] = 0;
+				return;
+			} else {
+				AddCharToCmd(buf,ch,&curIndex,&allIndex);
+			}
+
+		}
+	}	
+	/*for (int i = 0; i < n;++i) {
 		if ((r = read(0,buf + i,1)) != 1) {
 			if (r < 0) {
 				debugf("read error: %d\n",r);
@@ -163,7 +272,7 @@ void readline(char* buf, u_int n) {
 			return;
 		}
 
-	}
+	}*/
 	debugf("line too long\n");
 	while ((r = read(0,buf,1)) == 1 && buf[0] != '\r' && buf[0] != '\n');
 	buf[0] = 0;

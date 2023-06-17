@@ -75,10 +75,26 @@ static int spawn_mapper(void* data, u_long va, size_t offset, u_int perm, const 
 	return 0;
 }
 
-int spawn(char* prog, char** argv) {
+static void doWithCmdName(char* tmpName,char*prog) {
+	int t;
+	for (t = 0; prog[t]; ++t) {
+		tmpName[t] = prog[t];
+	}
+	tmpName[t] = 0;
+	if (strchr(tmpName,'.') == NULL) {
+		tmpName[t] = '.';
+		tmpName[t + 1] = 'b';
+		tmpName[t + 2] = 0;
+	}
 
+}
+
+
+int spawn(char* prog, char** argv) {
+	char tmpName[MAXNAMELEN] = {0};
+	doWithCmdName(tmpName,prog);
 	int fd;
-	if ((fd = open(prog, O_RDONLY)) < 0) {
+	if ((fd = open(tmpName, O_RDONLY)) < 0) {
 		return fd;
 	}
 	int r;

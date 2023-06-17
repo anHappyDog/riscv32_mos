@@ -9,6 +9,17 @@
 #include <ecall.h>
 #include <trap.h>
 
+#define CURSOR_UP 65
+#define CURSOR_DOWN 66
+#define CURSOR_RIGHT 67
+#define CURSOR_LEFT 68
+
+#define CURSOR_FORMER_RIGHT -1
+#define CURSOR_FORMER_LEFT -2
+#define CURSOR_FORMER_UP -3
+#define CURSOR_FORMER_DOWN -4
+
+
 #define vpt ((volatile Pte*)UVPT)
 #define vpd ((volatile Pde*)(UVPT + (PDX(UVPT) << PGSHIFT)))
 #define envs ((volatile struct Env*)UENVS)

@@ -246,7 +246,7 @@ void env_free(struct Env* e) {
 	int flag = 0;
 	printk("[%08x] free env %08x \n",curenv?curenv->env_id:0,e->env_id);
 	for (pdeno = 0; pdeno < PDX(~0); ++pdeno) {
-		if (pdeno >= PDX(UTOP) && pdeno < PDX(0X88000000)) {
+		if ((pdeno >= PDX(UTOP) && pdeno < PDX(UVPT)) || pdeno == PDX(DISK_ADDRESS) || (pdeno >= PDX(ULIM) && pdeno < PDX(0X88000000))) {
 			continue;
 		}
 		flag = 0;

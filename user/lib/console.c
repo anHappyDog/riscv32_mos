@@ -46,9 +46,32 @@ int cons_read(struct Fd* fd, void* buf, u_int n, u_int offset) {
 	while((c = ecall_cgetc()) == 0) {
 		ecall_yield();
 	}
-	if (c != '\r') {
-		debugf("%c",c);	
+	if (c == 27) {
+		while ((c = ecall_cgetc()) == 0) {
+			ecall_yield();
+		}	
+		if (c == 91) {
+			while ((c = ecall_cgetc()) == 0) {
+				ecall_yield();
+			}
+			if (c == CURSOR_RIGHT) {
+				*(char*)buf = CURSOR_FORMER_RIGHT;
+			} else if (c == CURSOR_LEFT) {
+				*(char*)buf = CURSOR_FORMER_LEFT;
+			}  else if (c == CURSOR_UP) {
+				*(char*)buf = CURSOR_FORMER_UP;
+			} else if (c == CURSOR_DOWN) {
+				*(char*)buf = CURSOR_FORMER_DOWN;
+			}
+			return 1;
+		}
 	} else {
+	if (c != '\r') {
+		if (c != '\b' && c != 0x7f) {
+			debugf("%c",c);	
+		}
+	} else {
+		c = '\n';
 		debugf("\n");
 	}
 	if (c < 0) {
@@ -58,9 +81,9 @@ int cons_read(struct Fd* fd, void* buf, u_int n, u_int offset) {
 		return 0;
 	}
 	*(char*)buf = c;
-	return 1;
-
-
+	return 1;	
+	}
+	return 0;
 }
 
 int cons_write(struct Fd* fd,const void* buf,u_int n,u_int offset) {
