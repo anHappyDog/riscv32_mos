@@ -14,6 +14,7 @@ struct Trapframe {
 	unsigned long sepc;
 	unsigned long stval;
 	unsigned long scause;
+	unsigned long sscratch;
 };
 
 void print_tf(struct Trapframe *tf);
@@ -58,8 +59,8 @@ void print_tf(struct Trapframe *tf);
 #define REG_SEPC (REG_STATUS + 4)
 #define REG_STVAL (REG_SEPC + 4)
 #define REG_SCAUSE (REG_STVAL + 4)
-
-#define TF_SIZE (REG_SCAUSE + 4)
+#define REG_SSCRATCH (REG_SCAUSE + 4)
+#define TF_SIZE (REG_SSCRATCH + 4)
 
 
 

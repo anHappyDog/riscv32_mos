@@ -4,9 +4,7 @@
 .macro BUILD_HANDLER exception handler
 NESTED(handle_\exception, TF_SIZE + 8, zero) 
 	mv      a0, sp
-	addi    sp,sp,-8
 	jal 	\handler
-	addi    sp,sp,8
 	j       ret_from_exception
 END(handle_\exception)
 .endm
@@ -14,13 +12,6 @@ END(handle_\exception)
 
 FEXPORT(ret_from_exception) 
 	RESTORE_ALL
-	/*addi sp,sp,-4
-	sw   t0, (sp)
-	csrr t0, sepc
-	addi t0,t0,4
-	csrw sepc, t0
-	lw  t0,(sp)
-	addi sp,sp,4*/
 	sret
 
 
