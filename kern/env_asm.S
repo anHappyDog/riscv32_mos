@@ -5,8 +5,9 @@
 .text 
 LEAF(env_pop_tf)
 .option pic
-	csrw sscratch,sp
 	move sp,a0
+	lw  t0, REG_SSCRATCH(sp)	
+	csrw sscratch,t0
 	#j ret_from_exception
 	lw  s1, REG_STATUS(sp)
 	lw  s2, REG_SEPC(sp)

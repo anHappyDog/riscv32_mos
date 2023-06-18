@@ -124,7 +124,7 @@ void env_init(void) {
 		pgdir_init_fill(base_pgdir,addr,addr,PTE_G | PTE_R | PTE_X);
 	}
 	//map_segment(base_pgdir,0,KERNSTART,KERNSTART,ROUNDDOWN((u_long)envs - KERNSTART,BY2PG),PTE_R | PTE_X | PTE_G);
-	for (addr = ROUNDDOWN((u_long)envs,BY2PG);addr < KERNEND;addr += BY2PG) {
+	for (addr = ROUNDDOWN((u_long)envs,BY2PG);addr < KERNEND - 3 * BY2PG;addr += BY2PG) {
 		pgdir_init_fill(base_pgdir,addr,addr,PTE_G | PTE_R | PTE_W);
 	}
 	//map_segment(base_pgdir,0,(u_long)envs,(u_long)envs,ROUND(NENV * sizeof(struct Env),BY2PG),PTE_R | PTE_W | PTE_G);
@@ -165,6 +165,10 @@ static int env_setup_vm(struct Env* e) {
 		p = NULL;
 		try(page_alloc(&p));
 		page_insert(e->env_pgdir,e->env_asid,p,UXSTACKTOP - (i + 1) * BY2PG,PTE_U | PTE_W | PTE_R);
+		p = NULL;
+		try(page_alloc(&p));
+		page_insert(e->env_pgdir,e->env_asid,p,KSTACKTOP - (i + 1) * BY2PG,PTE_W | PTE_R);
+
 	}
 	/*
 	   map_segment(e->env_pgdir,e->env_asid,(u_long)(e->env_pgdir),(u_long)(e->env_pgdir),BY2PG,PTE_U | PTE_R | PTE_W);
@@ -187,7 +191,7 @@ int env_alloc(struct Env** new, u_int parent_id) {
 	try(env_setup_vm(e));
 	e->env_cow_entry = 0;
 	e->env_runs = 0;
-
+	
 	e->env_id = mkenvid(e);
 	try(asid_alloc(&(e->env_asid)));
 	e->env_parent_id = parent_id;
@@ -195,7 +199,7 @@ int env_alloc(struct Env** new, u_int parent_id) {
 	e->env_tf.sstatus = ((1 << 1)|(1 << 18));
 	//give space for argc and argv
 	e->env_tf.regs[2] = USTACKTOP - sizeof(int) - sizeof(char**); 
-
+	e->env_tf.sscratch = KSTACKTOP - sizeof(int) - sizeof(char**);
 	LIST_REMOVE(e,env_link);
 	*new = e;
 	return 0;
@@ -295,7 +299,8 @@ extern void env_pop_tf(struct Trapframe* tf) __attribute__((noreturn));
 
 void env_run(struct Env* e) {
 	assert(e->env_status == ENV_RUNNABLE);
-
+	printk("cccccccccccc: e->envi : %08x\n",e->env_tf.sscratch);
+	printk("sepc is %08x\n",e->env_tf.sepc);
 	if(curenv) {
 		curenv->env_tf = *((struct Trapframe*)RD_SSCRATCH());
 	}

@@ -1,3 +1,3 @@
-targets := t1.x t2.x t3.x
+targets := t1.x t2.x
 
 include ../include.mk

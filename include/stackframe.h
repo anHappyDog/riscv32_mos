@@ -48,12 +48,13 @@ trap_from_user:
 		csrr  s2, sepc
 		csrr  s3, stval
 		csrr  s4, scause
+		csrr  s5, sscratch
 		sw  s0,     REG_SP(sp)
 		sw  s1,	    REG_STATUS(sp)
 		sw  s2,	    REG_SEPC(sp)
 		sw  s3,     REG_STVAL(sp)
 		sw  s4,		REG_SCAUSE(sp)
-		
+		sw  s5,     REG_SSCRATCH(sp)
 .endm
 
 
