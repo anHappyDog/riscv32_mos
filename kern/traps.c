@@ -41,7 +41,10 @@ void (*exception_handlers[32])(void) = {
 
 void do_load_page(struct Trapframe* tf) {
 	u_int stval = tf->stval;
-	if (stval < UVPT) {
+	if (stval < UTEMP) {
+		panic("load illegal page!\n");
+	}
+	else if (stval < UVPT) {
 		Pte* pte1;
 		struct Page* pp = page_lookup(curenv->env_pgdir,tf->stval,&pte1);
 		if (pp == NULL && page_alloc(&pp) != 0) {
@@ -57,7 +60,9 @@ void do_load_page(struct Trapframe* tf) {
 		Pte* pt;
 		if (*pd == 0) {
 			struct Page* pp;
-			page_alloc(&pp);
+			if (page_alloc(&pp)!=0) {
+				panic("load vpt used all pages!\n");
+			}
 			pp->pp_ref += 1;
 			*pd = page2ptx(pp) | PTE_V;
 		} 
@@ -65,7 +70,9 @@ void do_load_page(struct Trapframe* tf) {
 			pt = (Pte*)PADDR(PTE_ADDR(*(pgdir + i)));
 			if (pt == 0) {
 				struct Page* pp;
-				page_alloc(&pp);
+				if (page_alloc(&pp) != 0) {
+					panic("used all pages!\n");
+				}
 				*(pgdir + i) = page2ptx(pp) | PTE_V;
 				pp->pp_ref += 1;
 				page_insert(pgdir,curenv->env_asid,pp,(UVPT + (i << PGSHIFT)),PTE_R | PTE_U);
