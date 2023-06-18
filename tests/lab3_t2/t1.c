@@ -1,6 +1,8 @@
 #include <lib.h>
 
+int xx = 0;
+
 int main() {
-	debugf("This is aaa\n");
+	debugf("aaaaaaaaaaaaaa\n");
 	return 0;
 }
