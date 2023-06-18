@@ -17,7 +17,7 @@ struct Page_list page_free_list;
 
 void riscv32_detect_memory() {
 //	memsize = csr_read(CSR_HGATP); 
-	memsize =  128 * 1024 * 1024;
+	memsize =  256 * 1024 * 1024;
 	npage = memsize / BY2PG ;
 	printk("Memory size: %lu bytes, number of pages: %lu\n",memsize,npage);
 }
@@ -245,7 +245,7 @@ int pgdir_init() {
 	for (u_long addr = KERNEND; addr < ROUNDDOWN((u_long)pages,BY2PG); addr += BY2PG) {
 		try(pgdir_init_fill(pgdir,addr,addr,PTE_R | PTE_X));
 	}
-	for (u_long addr = ROUNDDOWN((u_long)pages,BY2PG); addr < 0X88000000; addr += BY2PG) {
+	for (u_long addr = ROUNDDOWN((u_long)pages,BY2PG); addr < 0X90000000; addr += BY2PG) {
 		try(pgdir_init_fill(pgdir,addr,addr,PTE_R | PTE_W));
 	}
 	try(pgdir_map(pgdir,0,DISK_ADDRESS - KERNSTART,DISK_ADDRESS,PTE_R | PTE_W));

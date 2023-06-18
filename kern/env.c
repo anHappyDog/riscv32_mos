@@ -137,7 +137,7 @@ void env_init(void) {
 		pgdir_init_fill(base_pgdir,addr,addr,PTE_G | PTE_R | PTE_W);
 	}
 	
-	for (addr = ROUND(pages + npage * sizeof(struct Page),BY2PG);addr < 0X88000000; addr += BY2PG) {
+	for (addr = ROUND(pages + npage * sizeof(struct Page),BY2PG);addr < 0X90000000; addr += BY2PG) {
 		pgdir_init_fill(base_pgdir,addr,addr,PTE_G | PTE_R | PTE_W);
 	} 
 	//map_segment(base_pgdir,0,ROUND((u_long)pages + npage * sizeof(struct Page),BY2PG),ROUND((u_long)pages + npage * sizeof(struct Page),BY2PG),ROUND(0X88000000 - ((u_long)pages + npage * sizeof(struct Page)),BY2PG ),PTE_R | PTE_W);
@@ -161,7 +161,7 @@ static int env_setup_vm(struct Env* e) {
 	p->pp_ref += 1;
 	e->env_pgdir = (Pte*)page2addr(p);
 	memcpy(e->env_pgdir,base_pgdir,BY2PG);
-	for (int i = 0; i < 10; ++i) {
+	for (int i = 0; i < 3; ++i) {
 		p = NULL;
 		try(page_alloc(&p));
 		page_insert(e->env_pgdir,e->env_asid,p,UXSTACKTOP - (i + 1) * BY2PG,PTE_U | PTE_W | PTE_R);
@@ -246,7 +246,7 @@ void env_free(struct Env* e) {
 	int flag = 0;
 	printk("[%08x] free env %08x \n",curenv?curenv->env_id:0,e->env_id);
 	for (pdeno = 0; pdeno < PDX(~0); ++pdeno) {
-		if ((pdeno >= PDX(UTOP) && pdeno < PDX(UVPT)) || pdeno == PDX(DISK_ADDRESS) || (pdeno >= PDX(ULIM) && pdeno < PDX(0X88000000))) {
+		if ((pdeno >= PDX(UTOP) && pdeno < PDX(UVPT)) || pdeno == PDX(DISK_ADDRESS) || (pdeno >= PDX(ULIM) && pdeno < PDX(0X90000000))) {
 			continue;
 		}
 		flag = 0;
