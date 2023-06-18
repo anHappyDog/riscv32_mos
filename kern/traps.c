@@ -68,12 +68,15 @@ void do_load_page(struct Trapframe* tf) {
 				page_alloc(&pp);
 				*(pgdir + i) = page2ptx(pp) | PTE_V;
 				pp->pp_ref += 1;
-				page_insert(pgdir,curenv->env_asid,pp,(UVPT + (i << PGSHIFT)),PTE_R | PTE_U);
+				pgdir_init_fill(pgdir,(UVPT + (i << PGSHIFT)),page2addr(pp),PTE_R | PTE_U);
+				//page_insert(pgdir,curenv->env_asid,pp,(UVPT + (i << PGSHIFT)),PTE_R | PTE_U);
 			} else {
-				page_insert(pgdir,curenv->env_asid,addr2page((u_long)pt),(UVPT + (i << PGSHIFT)),PTE_R | PTE_U);	
+			pgdir_init_fill(pgdir,(UVPT + (i << PGSHIFT)),(u_long)pt,PTE_R | PTE_U);	
+			//page_insert(pgdir,curenv->env_asid,addr2page((u_long)pt),(UVPT + (i << PGSHIFT)),PTE_R | PTE_U);	
 			}	
 		}
-		page_insert(pgdir,curenv->env_asid,addr2page((u_long)pgdir),(UVPT + (PDX(UVPT) << PGSHIFT)),PTE_R | PTE_U);
+			pgdir_init_fill(pgdir,(UVPT + (PDX(UVPT) << PGSHIFT)),(u_long)pgdir,PTE_R | PTE_U);
+		//page_insert(pgdir,curenv->env_asid,addr2page((u_long)pgdir),(UVPT + (PDX(UVPT) << PGSHIFT)),PTE_R | PTE_U);
 	} else {
 		Pte* pte1;
 		struct Page* pp = page_lookup(curenv->env_pgdir,tf->stval,&pte1);
