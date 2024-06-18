@@ -1,4 +1,3 @@
-#include <asm/cp0regdef.h>
 #include <asm/regdef.h>
 
 /*
@@ -8,9 +7,8 @@
 	.globl symbol;                                                                             \
 	.align 2;                                                                                  \
 	.type symbol, @function;                                                                   \
-	.ent symbol;                                                                               \
 	symbol:                                                                                    \
-	.frame sp, 0, ra
+	//.frame sp, 0, ra
 
 /*
  * NESTED - declare nested routine entry point
@@ -19,15 +17,13 @@
 	.globl symbol;                                                                             \
 	.align 2;                                                                                  \
 	.type symbol, @function;                                                                   \
-	.ent symbol;                                                                               \
 	symbol:                                                                                    \
-	.frame sp, framesize, rpc
+	//.frame sp, framesize, rpc;
 
 /*
  * END - mark end of function
  */
 #define END(function)                                                                              \
-	.end function;                                                                             \
 	.size function, .- function
 
 #define EXPORT(symbol)                                                                             \
@@ -38,3 +34,5 @@
 	.globl symbol;                                                                             \
 	.type symbol, @function;                                                                   \
 	symbol:
+
+

@@ -13,12 +13,6 @@ typedef LIST_ENTRY(Page) Page_LIST_entry_t;
 
 struct Page {
 	Page_LIST_entry_t pp_link; /* free list link */
-
-	// Ref is the count of pointers (usually in page table entries)
-	// to this page.  This only holds for pages allocated using
-	// page_alloc.  Pages allocated at boot time using pmap.c's "alloc"
-	// do not have valid reference count fields.
-
 	u_short pp_ref;
 };
 
@@ -29,19 +23,27 @@ static inline u_long page2ppn(struct Page *pp) {
 	return pp - pages;
 }
 
-static inline u_long page2pa(struct Page *pp) {
+static inline u_long page2sft(struct Page *pp) {
 	return page2ppn(pp) << PGSHIFT;
 }
 
-static inline struct Page *pa2page(u_long pa) {
-	if (PPN(pa) >= npage) {
-		panic("pa2page called with invalid pa: %x", pa);
+static inline struct Page *addr2page(u_long addr) {
+	if (PPN(addr) >= npage) {
+		panic("pa2page called with invalid ahdress: %x", addr);
 	}
-	return &pages[PPN(pa)];
+	return &pages[PPN(addr)];
 }
 
-static inline u_long page2kva(struct Page *pp) {
-	return KADDR(page2pa(pp));
+static inline u_long page2addr(struct Page *pp) {
+	return page2sft(pp) + KERNSTART;
+}
+
+static inline u_long page2ptx(struct Page *pp) {
+	return ((page2addr(pp) >> PGSHIFT) << PTSHIFT);
+}
+
+static inline struct Page* pa2page(u_long pa) {
+	return addr2page((pa >> PTSHIFT) << PGSHIFT);
 }
 
 static inline u_long va2pa(Pde *pgdir, u_long va) {
@@ -51,26 +53,29 @@ static inline u_long va2pa(Pde *pgdir, u_long va) {
 	if (!(*pgdir & PTE_V)) {
 		return ~0;
 	}
-	p = (Pte *)KADDR(PTE_ADDR(*pgdir));
+	p = (Pte *)PADDR(PTE_ADDR(*pgdir));
 	if (!(p[PTX(va)] & PTE_V)) {
 		return ~0;
 	}
-	return PTE_ADDR(p[PTX(va)]);
+	return PADDR(PTE_ADDR(p[PTX(va)]));
 }
 
-void mips_detect_memory(void);
-void mips_vm_init(void);
-void mips_init(void);
+void riscv32_detect_memory(void);
+void riscv32_init(void);
 void page_init(void);
 void *alloc(u_int n, u_int align, int clear);
 
+int pgdir_init();
+
+int pgdir_init_fill(Pde* pgdir,u_long va,u_long pa,u_long perm); 
 int page_alloc(struct Page **pp);
 void page_free(struct Page *pp);
 void page_decref(struct Page *pp);
 int page_insert(Pde *pgdir, u_int asid, struct Page *pp, u_long va, u_int perm);
 struct Page *page_lookup(Pde *pgdir, u_long va, Pte **ppte);
 void page_remove(Pde *pgdir, u_int asid, u_long va);
-void tlb_invalidate(u_int asid, u_long va);
+int pgdir_map(Pde* pgdir, u_int asid, u_long pa, u_long va, u_int perm);
+int page_alloc_sequent(struct Page** newp, int n);
 
 extern struct Page *pages;
 

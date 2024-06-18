@@ -1,14 +1,14 @@
-#include <drivers/dev_cons.h>
-#include <mmu.h>
-
+#include <sbi.h>
 void printcharc(char ch) {
-	*((volatile char *)(KSEG1 + DEV_CONS_ADDRESS + DEV_CONS_PUTGETCHAR)) = ch;
+	SBI_PUTCHAR(ch);
 }
 
-char scancharc(void) {
-	return *((volatile char *)(KSEG1 + DEV_CONS_ADDRESS + DEV_CONS_PUTGETCHAR));
+int scancharc(void) {
+	int x = 0;
+	while((x = SBI_GETCHAR()) == -1);
+	return x;
 }
 
 void halt(void) {
-	*((volatile char *)(KSEG1 + DEV_CONS_ADDRESS + DEV_CONS_HALT)) = 0;
+	SBI_SHUTDOWN();
 }

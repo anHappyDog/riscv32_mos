@@ -7,7 +7,7 @@ readelf: main.o readelf.o
 	$(CC) $^ -g -o $@
 
 hello: hello.c
-	$(CC) $^ -o $@ -m32 -static -g
+	$(CC) $^ -o $@  -g
 
 clean:
 	rm -f *.o readelf hello

@@ -16,7 +16,7 @@
 #define E_NO_MEM 4
 
 // Invalid syscall number
-#define E_NO_SYS 5
+#define E_NO_E 5
 
 // Attempt to create a new environment beyond the maximum allowed
 #define E_NO_FREE_ENV 6

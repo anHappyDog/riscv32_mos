@@ -4,105 +4,105 @@
 
 // clang-format off
 .macro SAVE_ALL
-.set noreorder
-.set noat
-	move    k0, sp
-.set reorder
-	bltz    sp, 1f
-	li      sp, KSTACKTOP
-.set noreorder
-1:
-	subu    sp, sp, TF_SIZE
-	sw      k0, TF_REG29(sp)
-	mfc0    k0, CP0_STATUS
-	sw      k0, TF_STATUS(sp)
-	mfc0    k0, CP0_CAUSE
-	sw      k0, TF_CAUSE(sp)
-	mfc0    k0, CP0_EPC
-	sw      k0, TF_EPC(sp)
-	mfc0    k0, CP0_BADVADDR
-	sw      k0, TF_BADVADDR(sp)
-	mfhi    k0
-	sw      k0, TF_HI(sp)
-	mflo    k0
-	sw      k0, TF_LO(sp)
-	sw      $0, TF_REG0(sp)
-	sw      $1, TF_REG1(sp)
-	sw      $2, TF_REG2(sp)
-	sw      $3, TF_REG3(sp)
-	sw      $4, TF_REG4(sp)
-	sw      $5, TF_REG5(sp)
-	sw      $6, TF_REG6(sp)
-	sw      $7, TF_REG7(sp)
-	sw      $8, TF_REG8(sp)
-	sw      $9, TF_REG9(sp)
-	sw      $10, TF_REG10(sp)
-	sw      $11, TF_REG11(sp)
-	sw      $12, TF_REG12(sp)
-	sw      $13, TF_REG13(sp)
-	sw      $14, TF_REG14(sp)
-	sw      $15, TF_REG15(sp)
-	sw      $16, TF_REG16(sp)
-	sw      $17, TF_REG17(sp)
-	sw      $18, TF_REG18(sp)
-	sw      $19, TF_REG19(sp)
-	sw      $20, TF_REG20(sp)
-	sw      $21, TF_REG21(sp)
-	sw      $22, TF_REG22(sp)
-	sw      $23, TF_REG23(sp)
-	sw      $24, TF_REG24(sp)
-	sw      $25, TF_REG25(sp)
-	sw      $26, TF_REG26(sp)
-	sw      $27, TF_REG27(sp)
-	sw      $28, TF_REG28(sp)
-	sw      $30, TF_REG30(sp)
-	sw      $31, TF_REG31(sp)
-.set at
-.set reorder
+	csrrw sp, sscratch ,sp
+	bnez  sp, trap_from_user
+trap_from_kernel:
+		csrr sp, sscratch
+trap_from_user:
+		addi sp,sp, -TF_SIZE
+		sw zero,    REG_ZERO(sp)
+		sw ra,      REG_RA(sp)
+		sw gp,      REG_GP(sp)
+   		sw tp, 		REG_TP(sp)
+		sw t0,		REG_T0(sp)
+		sw t1, 		REG_T1(sp)
+		sw t2,		REG_T2(sp)
+		sw fp,		REG_FP(sp)
+		sw s1,		REG_S1(sp)
+		sw a0,		REG_A0(sp)
+		sw a1,		REG_A1(sp)
+		sw a2,		REG_A2(sp)
+		sw a3, 		REG_A3(sp)
+		sw a4,		REG_A4(sp)
+		sw a5,		REG_A5(sp)
+		sw a6,		REG_A6(sp)
+		sw a7,		REG_A7(sp)
+		sw s2,		REG_S2(sp)
+		sw s3,		REG_S3(sp)
+		sw s4, 		REG_S4(sp)
+		sw s5, 		REG_S5(sp)
+		sw s6,		REG_S6(sp)
+		sw s7,		REG_S7(sp)
+		sw s8,		REG_S8(sp)
+		sw s9,		REG_S9(sp)
+		sw s10,		REG_S10(sp)
+		sw s11,		REG_S11(sp)
+		sw t3,		REG_T3(sp)
+		sw t4,		REG_T4(sp)
+		sw t5,		REG_T5(sp)
+		sw t6,		REG_T6(sp)
+		
+	//	csrrw s0,sscratch sp
+		csrrw s0,sscratch, sp
+		csrr  s1, sstatus
+		csrr  s2, sepc
+		csrr  s3, stval
+		csrr  s4, scause
+		sw  s0,     REG_SP(sp)
+		sw  s1,	    REG_STATUS(sp)
+		sw  s2,	    REG_SEPC(sp)
+		sw  s3,     REG_STVAL(sp)
+		sw  s4,		REG_SCAUSE(sp)
+		
 .endm
-/*
- * Note that we restore the IE flags from stack. This means
- * that a modified IE mask will be nullified.
- */
-.macro RESTORE_SOME
-.set noreorder
-.set noat
-	lw      v0, TF_STATUS(sp)
-	mtc0    v0, CP0_STATUS
-	lw      v1, TF_LO(sp)
-	mtlo    v1
-	lw      v0, TF_HI(sp)
-	lw      v1, TF_EPC(sp)
-	mthi    v0
-	mtc0    v1, CP0_EPC
-	lw      $31, TF_REG31(sp)
-	lw      $30, TF_REG30(sp)
-	lw      $28, TF_REG28(sp)
-	lw      $25, TF_REG25(sp)
-	lw      $24, TF_REG24(sp)
-	lw      $23, TF_REG23(sp)
-	lw      $22, TF_REG22(sp)
-	lw      $21, TF_REG21(sp)
-	lw      $20, TF_REG20(sp)
-	lw      $19, TF_REG19(sp)
-	lw      $18, TF_REG18(sp)
-	lw      $17, TF_REG17(sp)
-	lw      $16, TF_REG16(sp)
-	lw      $15, TF_REG15(sp)
-	lw      $14, TF_REG14(sp)
-	lw      $13, TF_REG13(sp)
-	lw      $12, TF_REG12(sp)
-	lw      $11, TF_REG11(sp)
-	lw      $10, TF_REG10(sp)
-	lw      $9, TF_REG9(sp)
-	lw      $8, TF_REG8(sp)
-	lw      $7, TF_REG7(sp)
-	lw      $6, TF_REG6(sp)
-	lw      $5, TF_REG5(sp)
-	lw      $4, TF_REG4(sp)
-	lw      $3, TF_REG3(sp)
-	lw      $2, TF_REG2(sp)
-	lw      $1, TF_REG1(sp)
-.set at
-.set reorder
+
+
+.macro RESTORE_ALL
+	lw  s1, REG_STATUS(sp)
+	lw  s2, REG_SEPC(sp)
+	andi s0, s1, 1<<8
+	bnez s0, _to_kernel
+_to_user:
+	addi s0,sp, TF_SIZE
+	csrw sscratch,s0
+_to_kernel:
+	csrw sstatus, s1
+	csrw sepc   , s2
+		
+	lw ra, REG_RA(sp)
+	lw gp, REG_GP(sp)
+	lw tp, REG_TP(sp)
+	lw t0, REG_T0(sp)
+	lw t1, REG_T1(sp)
+	lw t2, REG_T2(sp)
+	lw fp, REG_FP(sp)
+	lw s1, REG_S1(sp)
+	lw a0, REG_A0(sp)
+	lw a1, REG_A1(sp)
+	lw a2, REG_A2(sp)
+	lw a3, REG_A3(sp)
+	lw a4, REG_A4(sp)
+	lw a5, REG_A5(sp)
+	lw a6, REG_A6(sp)
+	lw a7, REG_A7(sp)
+	lw s2, REG_S2(sp)
+	lw s3, REG_S3(sp)
+	lw s4, REG_S4(sp)
+	lw s5, REG_S5(sp)
+	lw s6, REG_S6(sp)
+	lw s7, REG_S7(sp)
+	lw s8, REG_S8(sp)
+	lw s9, REG_S9(sp)
+	lw s10, REG_S10(sp)
+	lw s11, REG_S11(sp)
+	lw t3, REG_T3(sp)
+	lw t4, REG_T4(sp)
+	lw t5, REG_T5(sp)
+	lw t6, REG_T6(sp)
+
+	lw sp, REG_SP(sp)
 .endm
+
+
+
+

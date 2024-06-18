@@ -9,7 +9,6 @@ SECTIONS {
         *(.boot)
         *(.text)
     }
-
     .data : {
         *(.data .data* .sdata .sdata*)
     }
@@ -18,8 +17,11 @@ SECTIONS {
         *(.bss .bss* .sbss .sbss*)
     }
     bss_end = .;
-    . = 0x80600000;
-    end = . ;
+    . = 0x80600000; 
+	.exc_gen_entey : {
+		*(.text.exc_gen_entry);
+	}
+	end = . ;
 }
 
 

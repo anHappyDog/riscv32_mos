@@ -1,0 +1,25 @@
+#!/bin/bash
+set -e
+for s in "$@"; do
+	name="$(echo "$s/" | cut -f1 -d/)"
+	pri="$(echo "$s/" | cut -f2 -d/)"
+	if [ -z "$name" ]; then
+		out="$out ENV_CREATE($pri);"
+	elif [ -z "$pri"]; then
+		out="$out ENV_CREATE(test_$name);"
+	else 
+		out="$out ENV_CREATE_PRIORITY(test_$name,$pri);"
+	fi
+done
+
+echo 'void riscv32_init() {
+	printk("init.c:\triscv32_init() is called!\n");
+	riscv32_detect_memory();
+	page_init();
+	pgdir_init();
+	disk_init();
+	env_init();
+'"$out"';
+	SBI_TIMER(200000 + RD_TIME());
+	while(1);
+}' > include/generated/init_override.h

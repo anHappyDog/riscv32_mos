@@ -32,8 +32,8 @@ struct Env {
 	u_int env_ipc_dstva;   // va at which to map received page
 	u_int env_ipc_perm;    // perm of page mapping received
 
-	// Lab 4 fault handling
-	u_int env_user_tlb_mod_entry; // user tlb mod handler
+	//u_int env_user_tlb_mod_entry; // user tlb mod handler
+	u_int env_cow_entry;
 
 	// Lab 6 scheduler counts
 	u_int env_runs; // number of times been env_run'ed
@@ -50,6 +50,8 @@ void env_free(struct Env *);
 struct Env *env_create(const void *binary, size_t size, int priority);
 void env_destroy(struct Env *e);
 
+
+void reflect_pgdir(struct Env* e);
 int envid2env(u_int envid, struct Env **penv, int checkperm);
 void env_run(struct Env *e) __attribute__((noreturn));
 void enable_irq(void);
